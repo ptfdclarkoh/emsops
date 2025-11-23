@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1">
+    <title>Medic 75 Central Hub</title>
+    
+    <!-- PWA Settings -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Medic 75 Hub">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- PapaParse for CSV -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f3f4f6;
+        }
+        
+        /* Custom Scrollbar for Sidebar */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Active Tab Styling */
+        .nav-item.active {
+            background-color: #1f2937; /* gray-800 */
+            color: #ffffff;
+            border-left: 4px solid #3b82f6; /* blue-500 */
+        }
+        
+        /* Loading Spinner */
+        .spinner {
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #3b82f6;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Transitions */
+        .view-section {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        .view-section.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden text-gray-800">
+
+    <!-- Mobile Header (Visible only on small screens) -->
+    <div class="fixed w-full z-30 flex bg-white border-b p-4 md:hidden items-center justify-between h-16">
+        <div class="flex items-center font-bold text-xl text-gray-800">
+            <i class="fa-solid fa-star-of-life text-blue-600 mr-2"></i> Medic 75
+        </div>
+        <button id="mobileMenuBtn" class="text-gray-500 hover:text-gray-900 focus:outline-none">
+            <i class="fa-solid fa-bars text-2xl"></i>
+        </button>
+    </div>
+
+    <!-- Sidebar Navigation -->
+    <aside id="sidebar" class="bg-white border-r w-64 flex-shrink-0 fixed md:static h-full z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col">
+        <div class="h-16 flex items-center px-6 border-b">
+            <i class="fa-solid fa-star-of-life text-blue-600 text-2xl mr-3"></i>
+            <span class="text-xl font-bold text-gray-800">Operations Hub</span>
+        </div>
+
+        <div class="flex-1 overflow-y-auto no-scrollbar py-4">
+            <nav class="space-y-1">
+                <a href="#" onclick="Router.navigate('dashboard')" id="nav-dashboard" class="nav-item flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">
+                    <i class="fa-solid fa-chart-line w-6"></i>
+                    <span class="font-medium">Overview</span>
+                </a>
+
+                <div class="px-6 pt-4 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Supplies</div>
+                
+                <a href="#" onclick="Router.navigate('inventory')" id="nav-inventory" class="nav-item flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">
+                    <i class="fa-solid fa-boxes-stacked w-6"></i>
+                    <span class="font-medium">Inventory Log</span>
+                </a>
+                <a href="#" onclick="Router.navigate('transactions')" id="nav-transactions" class="nav-item flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">
+                    <i class="fa-solid fa-clipboard-list w-6"></i>
+                    <span class="font-medium">Transactions</span>
+                </a>
+
+                <div class="px-6 pt-4 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Logistics</div>
+                
+                <a href="#" onclick="Router.navigate('drugbag')" id="nav-drugbag" class="nav-item flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">
+                    <i class="fa-solid fa-suitcase-medical w-6"></i>
+                    <span class="font-medium">Drug Bag Exchange</span>
+                </a>
+                <a href="#" onclick="Router.navigate('oxygen')" id="nav-oxygen" class="nav-item flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">
+                    <i class="fa-solid fa-lungs w-6"></i>
+                    <span class="font-medium">Oxygen Tracker</span>
+                </a>
+            </nav>
+        </div>
+
+        <div class="p-4 border-t bg-gray-50">
+            <div class="flex items-center">
+                <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
+                    <i class="fa-regular fa-user"></i>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-gray-700" id="userStatus">Connecting...</p>
+                    <p class="text-xs text-gray-500">Firestore Connected</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Overlay for mobile sidebar -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-gray-800 bg-opacity-50 z-30 hidden md:hidden"></div>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-y-auto h-full pt-16 md:pt-0 bg-gray-100 relative">
+        
+        <!-- === VIEW: DASHBOARD === -->
+        <div id="view-dashboard" class="view-section active p-6 max-w-7xl mx-auto">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
+            <p class="text-gray-500 mb-8">Welcome to the Medic 75 Central Operations Hub.</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Card 1 -->
+                <div onclick="Router.navigate('inventory')" class="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition cursor-pointer border border-gray-100 group">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="p-3 rounded-full bg-blue-100 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition">
+                            <i class="fa-solid fa-boxes-stacked text-xl"></i>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-gray-300"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-800">Supply Inventory</h3>
+                    <p class="text-gray-500 text-sm mt-1">Manage cabinet contents, edit items, and check expiration dates.</p>
+                </div>
+
+                <!-- Card 2 -->
+                <div onclick="Router.navigate('drugbag')" class="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition cursor-pointer border border-gray-100 group">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="p-3 rounded-full bg-red-100 text-red-600 group-hover:bg-red-600 group-hover:text-white transition">
+                            <i class="fa-solid fa-suitcase-medical text-xl"></i>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-gray-300"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-800">Drug Bag Exchange</h3>
+                    <p class="text-gray-500 text-sm mt-1">Log bag exchanges, track numbers, and view history.</p>
+                </div>
+
+                <!-- Card 3 -->
+                <div onclick="Router.navigate('oxygen')" class="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition cursor-pointer border border-gray-100 group">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="p-3 rounded-full bg-green-100 text-green-600 group-hover:bg-green-600 group-hover:text-white transition">
+                            <i class="fa-solid fa-lungs text-xl"></i>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-gray-300"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-800">Oxygen Tracker</h3>
+                    <p class="text-gray-500 text-sm mt-1">Track main tank refills and portable bottle usage.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- === VIEW: INVENTORY === -->
+        <div id="view-inventory" class="view-section p-4 lg:p-8">
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <!-- Form Column -->
+                <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-lg h-auto">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">Add/Edit Item</h2>
+                    <form id="inv_form" class="space-y-4">
+                        <input type="hidden" id="inv_editDocId">
+                        
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Cabinet</label>
+                            <div id="inv_cabinetButtons" class="grid grid-cols-5 gap-1">
+                                <!-- JS Populated or static -->
+                                <button type="button" class="inv-btn-choice border px-1 py-2 rounded text-sm hover:bg-gray-100" data-value="1">1</button>
+                                <button type="button" class="inv-btn-choice border px-1 py-2 rounded text-sm hover:bg-gray-100" data-value="2">2</button>
+                                <button type="button" class="inv-btn-choice border px-1 py-2 rounded text-sm hover:bg-gray-100" data-value="3">3</button>
+                                <button type="button" class="inv-btn-choice border px-1 py-2 rounded text-sm hover:bg-gray-100" data-value="4">4</button>
+                                <button type="button" class="inv-btn-choice border px-1 py-2 rounded text-sm hover:bg-gray-100" data-value="DC">DC</button>
+                            </div>
+                            <input type="hidden" id="inv_cabinet">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Shelf</label>
+                            <div id="inv_shelfButtons" class="grid grid-cols-4 gap-1">
+                                <button type="button" class="inv-btn-choice border px-1 py-2 rounded text-sm hover:bg-gray-100" data-value="A">A</button>
+                                <button type="button" class="inv-btn-choice border px-1 py-2 rounded text-sm hover:bg-gray-100" data-value="B">B</button>
+                                <button type="button" class="inv-btn-choice border px-1 py-2 rounded text-sm hover:bg-gray-100" data-value="C">C</button>
+                                <button type="button" class="inv-btn-choice border px-1 py-2 rounded text-sm hover:bg-gray-100" data-value="D">D</button>
+                            </div>
+                            <input type="hidden" id="inv_shelf">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700">Item Name</label>
+                            <input type="text" id="inv_item" required class="mt-1 w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700">Quantity</label>
+                                <input type="number" id="inv_quantity" class="mt-1 w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700">Expiration</label>
+                                <input type="date" id="inv_expiration" class="mt-1 w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700">Notes</label>
+                            <textarea id="inv_notes" rows="2" class="mt-1 w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500"></textarea>
+                        </div>
+
+                        <div class="flex space-x-2 pt-2">
+                            <button type="submit" id="inv_submitBtn" class="flex-1 bg-blue-600 text-white py-2 rounded font-medium hover:bg-blue-700 transition">Save</button>
+                            <button type="button" id="inv_clearBtn" class="px-4 border rounded hover:bg-gray-100 transition">Clear</button>
+                        </div>
+                        <div id="inv_message" class="hidden p-2 text-sm text-center rounded"></div>
+                    </form>
+                </div>
+
+                <!-- Table Column -->
+                <div class="lg:col-span-3 bg-white p-6 rounded-xl shadow-lg flex flex-col h-[calc(100vh-140px)]">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-bold text-gray-800">Current Supplies</h2>
+                        <button onclick="InventoryApp.exportCSV()" class="text-green-600 hover:bg-green-50 px-3 py-1 rounded border border-green-600 text-sm font-medium transition">
+                            <i class="fa-solid fa-file-export mr-1"></i> CSV
+                        </button>
+                    </div>
+                    
+                    <input type="text" id="inv_search" placeholder="Search items, notes..." class="w-full p-2 mb-4 border rounded focus:ring-blue-500 focus:border-blue-500">
+
+                    <div class="flex-1 overflow-auto border rounded">
+                        <table class="min-w-full divide-y divide-gray-200 relative">
+                            <thead class="bg-gray-50 sticky top-0 z-10">
+                                <tr>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Loc</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Item</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Qty</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Exp</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inv_tableBody" class="bg-white divide-y divide-gray-200">
+                                <!-- JS Populated -->
+                            </tbody>
+                        </table>
+                        <div id="inv_loading" class="flex justify-center p-8"><div class="spinner"></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- === VIEW: TRANSACTIONS === -->
+        <div id="view-transactions" class="view-section p-4 lg:p-8">
+            <div class="bg-white p-6 rounded-xl shadow-lg h-full">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 border-b pb-4">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800">Transaction Log</h2>
+                        <p class="text-gray-500 text-sm">History of inventory changes.</p>
+                    </div>
+                    <button onclick="TransactionApp.downloadCSV()" class="mt-2 md:mt-0 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition">
+                        <i class="fa-solid fa-download mr-2"></i> Download CSV
+                    </button>
+                </div>
+
+                <!-- Filters -->
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-4 bg-gray-50 p-4 rounded border">
+                    <div class="md:col-span-6">
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Search</label>
+                        <input type="text" id="trans_search" placeholder="Search..." class="w-full p-2 border rounded">
+                    </div>
+                    <div class="md:col-span-3">
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Start</label>
+                        <input type="date" id="trans_start" class="w-full p-2 border rounded">
+                    </div>
+                    <div class="md:col-span-3">
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">End</label>
+                        <input type="date" id="trans_end" class="w-full p-2 border rounded">
+                    </div>
+                </div>
+
+                <div class="overflow-auto border rounded max-h-[600px]">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-100 sticky top-0">
+                            <tr>
+                                <th class="p-3 text-left text-xs font-medium text-gray-600 uppercase">Date</th>
+                                <th class="p-3 text-left text-xs font-medium text-gray-600 uppercase">Item</th>
+                                <th class="p-3 text-left text-xs font-medium text-gray-600 uppercase">Qty Change</th>
+                                <th class="p-3 text-left text-xs font-medium text-gray-600 uppercase">Reason</th>
+                                <th class="p-3 text-left text-xs font-medium text-gray-600 uppercase">User</th>
+                            </tr>
+                        </thead>
+                        <tbody id="trans_tableBody" class="bg-white divide-y divide-gray-200 text-sm"></tbody>
+                    </table>
+                    <div id="trans_loading" class="flex justify-center p-8"><div class="spinner"></div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- === VIEW: DRUG BAG EXCHANGE === -->
+        <div id="view-drugbag" class="view-section p-4 lg:p-8">
+            <div class="max-w-7xl mx-auto">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                    <h2 class="text-3xl font-bold text-gray-800">Drug Bag Exchanges</h2>
+                    <button onclick="DrugBagApp.printReport()" class="mt-4 md:mt-0 bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow">
+                        <i class="fa-solid fa-print mr-2"></i> Generate Report
+                    </button>
+                </div>
+
+                <!-- Filters -->
+                <div class="bg-white p-4 rounded-lg shadow mb-6 grid grid-cols-1 md:grid-cols-5 gap-4">
+                    <div class="md:col-span-2">
+                         <label class="block text-xs text-gray-500 mb-1">Search Bag #</label>
+                         <input type="text" id="db_search" placeholder="Bag Number..." class="w-full border rounded p-2">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">Facility</label>
+                        <select id="db_facilityFilter" class="w-full border rounded p-2"><option value="">All</option></select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">Start Date</label>
+                        <input type="date" id="db_startDate" class="w-full border rounded p-2">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">End Date</label>
+                        <input type="date" id="db_endDate" class="w-full border rounded p-2">
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left text-gray-500">
+                            <thead class="text-xs text-gray-700 uppercase bg-gray-100">
+                                <tr>
+                                    <th class="px-6 py-3">Timestamp</th>
+                                    <th class="px-6 py-3">Old Bag</th>
+                                    <th class="px-6 py-3">New Bag</th>
+                                    <th class="px-6 py-3">Reason</th>
+                                    <th class="px-6 py-3">Facility</th>
+                                    <th class="px-6 py-3">Submitted By</th>
+                                </tr>
+                            </thead>
+                            <tbody id="db_tableBody"></tbody>
+                        </table>
+                        <div id="db_loading" class="text-center p-8 text-gray-500">Loading records...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- === VIEW: OXYGEN TRACKER === -->
+        <div id="view-oxygen" class="view-section p-4 lg:p-8">
+            <div class="max-w-7xl mx-auto">
+                <!-- Header -->
+                <div class="flex justify-between items-center mb-6">
+                    <div class="flex items-center">
+                        <div class="bg-blue-600 text-white p-3 rounded-lg mr-4">
+                            <i class="fa-solid fa-lungs text-2xl"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-3xl font-bold text-gray-800">Oxygen Tracker</h1>
+                            <p class="text-gray-500">Main Tank & Portable Usage</p>
+                        </div>
+                    </div>
+                    <div>
+                        <input type="file" id="ox_csvInput" accept=".csv" class="hidden">
+                        <button onclick="document.getElementById('ox_csvInput').click()" class="bg-gray-800 hover:bg-gray-900 text-white font-bold py-2 px-4 rounded shadow">
+                            <i class="fa-solid fa-file-import mr-2"></i> Import
+                        </button>
+                    </div>
+                </div>
+
+                <div id="ox_importStatus" class="hidden mb-6 p-4 rounded-lg border bg-blue-50 border-blue-200 text-center">
+                    <p id="ox_importMsg" class="font-bold text-blue-800">Processing...</p>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+                        <div id="ox_progressBar" class="bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Tabs -->
+                <div class="flex border-b border-gray-200 mb-6">
+                    <button onclick="OxygenApp.switchTab('main')" id="ox-tab-main" class="px-6 py-3 text-blue-600 border-b-2 border-blue-600 font-medium focus:outline-none transition-colors">
+                        Main Tank
+                    </button>
+                    <button onclick="OxygenApp.switchTab('portable')" id="ox-tab-portable" class="px-6 py-3 text-gray-500 hover:text-gray-700 font-medium focus:outline-none transition-colors">
+                        Portable Bottles
+                    </button>
+                </div>
+
+                <!-- Subcategory: Main Tank -->
+                <div id="ox-view-main" class="bg-white rounded shadow-lg mb-8 overflow-hidden animate-fade-in">
+                    <div class="bg-blue-600 text-white p-3 font-bold flex items-center">
+                        <i class="fa-solid fa-truck-medical mr-2"></i> Main Tank Exchanges
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-sm">
+                            <thead class="bg-gray-50 border-b">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-gray-500 uppercase">Date</th>
+                                    <th class="px-4 py-3 text-left text-gray-500 uppercase">Member</th>
+                                    <th class="px-4 py-3 text-left text-gray-500 uppercase">New PSI</th>
+                                    <th class="px-4 py-3 text-left text-gray-500 uppercase">Old PSI</th>
+                                    <th class="px-4 py-3 text-left text-gray-500 uppercase">Issues</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ox_mainTable" class="divide-y divide-gray-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Subcategory: Portable -->
+                <div id="ox-view-portable" class="hidden bg-white rounded shadow-lg mb-8 overflow-hidden animate-fade-in">
+                    <div class="bg-green-600 text-white p-3 font-bold flex items-center">
+                        <i class="fa-solid fa-suitcase-medical mr-2"></i> Portable Logs
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-sm">
+                            <thead class="bg-gray-50 border-b">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-gray-500 uppercase">Date</th>
+                                    <th class="px-4 py-3 text-left text-gray-500 uppercase">Bottle ID</th>
+                                    <th class="px-4 py-3 text-left text-gray-500 uppercase">Cyl 1 PSI</th>
+                                    <th class="px-4 py-3 text-left text-gray-500 uppercase">Cyl 2 PSI</th>
+                                    <th class="px-4 py-3 text-left text-gray-500 uppercase">Member</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ox_portableTable" class="divide-y divide-gray-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="ox_loading" class="text-center py-4 text-gray-500">Loading oxygen logs...</div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Generic Edit/Delete Modal (Used by Inventory) -->
+    <div id="modal_action" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-50 hidden items-center justify-center">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm mx-4">
+            <h3 class="text-lg font-bold mb-2">Manage Item</h3>
+            <p id="modal_item_name" class="text-gray-600 mb-6">Select an action for this item.</p>
+            <div class="flex flex-col gap-3">
+                <button id="modal_btn_edit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Edit Entry</button>
+                <button id="modal_btn_delete" class="w-full bg-red-600 text-white py-2 rounded hover:bg-red-700">Delete Entry</button>
+                <button id="modal_btn_cancel" class="w-full bg-gray-200 text-gray-800 py-2 rounded hover:bg-gray-300">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Delete Modal -->
+    <div id="modal_confirm" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-50 hidden items-center justify-center">
+         <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm mx-4">
+            <div class="text-center mb-4">
+                <div class="mx-auto w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                    <i class="fa-solid fa-triangle-exclamation text-red-600 text-xl"></i>
+                </div>
+                <h3 class="text-lg font-bold">Confirm Deletion</h3>
+                <p class="text-sm text-gray-500 mt-2">Are you sure? This cannot be undone.</p>
+            </div>
+            <div class="flex gap-3">
+                <button id="modal_conf_delete" class="flex-1 bg-red-600 text-white py-2 rounded hover:bg-red-700">Delete</button>
+                <button id="modal_conf_cancel" class="flex-1 bg-gray-200 text-gray-800 py-2 rounded hover:bg-gray-300">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, query, orderBy, limit, onSnapshot, addDoc, setDoc, deleteDoc, doc, serverTimestamp, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- GLOBAL CONFIG ---
+        // Prioritize environment config, fall back to hardcoded for demo/dev
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "AIzaSyBTjbo2ndQYowrvmcDxeXfvNb_E3nSijH8",
+            authDomain: "ems-inventory.firebaseapp.com",
+            projectId: "ems-inventory",
+            storageBucket: "ems-inventory.firebasestorage.app",
+            messagingSenderId: "1076236960850",
+            appId: "1:1076236960850:web:07cc24cd638ef4a8298b8b",
+            measurementId: "G-BFFXWP4G42"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        let currentUser = null;
+
+        // --- ROUTER & UI LOGIC ---
+        window.Router = {
+            current: 'dashboard',
+            navigate: function(viewId) {
+                // Hide all views
+                document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+                // Deselect nav
+                document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+
+                // Show target
+                document.getElementById(`view-${viewId}`).classList.add('active');
+                const navLink = document.getElementById(`nav-${viewId}`);
+                if(navLink) navLink.classList.add('active');
+
+                this.current = viewId;
+                
+                // Close mobile menu if open
+                const sidebar = document.getElementById('sidebar');
+                const overlay = document.getElementById('sidebarOverlay');
+                sidebar.classList.remove('translate-x-0');
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+                // Restore desktop Sidebar visibility logic
+                if(window.innerWidth >= 768) {
+                    sidebar.classList.remove('-translate-x-full', 'translate-x-0');
+                }
+
+                // Trigger Load Data if needed
+                if(viewId === 'inventory') InventoryApp.init();
+                if(viewId === 'transactions') TransactionApp.init();
+                if(viewId === 'drugbag') DrugBagApp.init();
+                if(viewId === 'oxygen') OxygenApp.init();
+            }
+        };
+
+        // Mobile Menu Toggles
+        document.getElementById('mobileMenuBtn').addEventListener('click', () => {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.remove('-translate-x-full');
+            sidebar.classList.add('translate-x-0');
+            overlay.classList.remove('hidden');
+        });
+        document.getElementById('sidebarOverlay').addEventListener('click', () => {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.add('-translate-x-full');
+            sidebar.classList.remove('translate-x-0');
+            overlay.classList.add('hidden');
+        });
+
+        // --- APP MODULES ---
+
+        /* ================= INVENTORY MODULE ================= */
+        const InventoryApp = {
+            listener: null,
+            data: [],
+            selectedItem: null,
+
+            init: function() {
+                if(this.listener) return; // Already listening
+                if(!currentUser) return; 
+
+                const q = query(collection(db, 'supplies'));
+                document.getElementById('inv_loading').classList.remove('hidden');
+                
+                this.listener = onSnapshot(q, (snapshot) => {
+                    this.data = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
+                    this.render();
+                    document.getElementById('inv_loading').classList.add('hidden');
+                });
+                
+                this.setupForm();
+            },
+
+            render: function() {
+                const tbody = document.getElementById('inv_tableBody');
+                const filter = document.getElementById('inv_search').value.toLowerCase();
+                
+                const filtered = this.data.filter(item => 
+                    (item.item || '').toLowerCase().includes(filter) ||
+                    (item.notes || '').toLowerCase().includes(filter)
+                );
+
+                // Sort: Cabinet -> Shelf -> Item
+                filtered.sort((a,b) => {
+                    if ((a.cabinet||'') < (b.cabinet||'')) return -1;
+                    if ((a.cabinet||'') > (b.cabinet||'')) return 1;
+                    if ((a.shelf||'') < (b.shelf||'')) return -1;
+                    if ((a.shelf||'') > (b.shelf||'')) return 1;
+                    return (a.item||'').localeCompare(b.item||'');
+                });
+
+                tbody.innerHTML = filtered.map(item => `
+                    <tr class="hover:bg-gray-50 cursor-pointer text-sm" onclick="InventoryApp.openModal('${item.id}')">
+                        <td class="px-3 py-2 font-mono text-gray-600">${item.cabinet || '-'}-${item.shelf || '-'}</td>
+                        <td class="px-3 py-2 font-semibold text-gray-900">${item.item || '?'}</td>
+                        <td class="px-3 py-2 text-gray-700">${item.quantity ?? '-'}</td>
+                        <td class="px-3 py-2 ${this.checkExp(item.earliestExpiration)}">${item.earliestExpiration || '-'}</td>
+                        <td class="px-3 py-2 text-gray-500 truncate max-w-[150px]">${item.notes || ''}</td>
+                    </tr>
+                `).join('');
+                
+                if(filtered.length === 0) tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400">No items found.</td></tr>`;
+            },
+
+            checkExp: function(dateStr) {
+                if(!dateStr) return '';
+                const d = new Date(dateStr);
+                const now = new Date();
+                const months3 = new Date(); months3.setMonth(now.getMonth() + 3);
+                
+                if(d < now) return 'text-red-600 font-bold'; // Expired
+                if(d < months3) return 'text-orange-500 font-bold'; // Expiring soon
+                return 'text-green-600';
+            },
+
+            setupForm: function() {
+                // Cabinet Buttons
+                document.getElementById('inv_cabinetButtons').addEventListener('click', (e) => {
+                    if(!e.target.classList.contains('inv-btn-choice')) return;
+                    document.querySelectorAll('#inv_cabinetButtons .inv-btn-choice').forEach(b => {
+                        b.classList.remove('bg-blue-600', 'text-white');
+                        b.classList.add('hover:bg-gray-100');
+                    });
+                    e.target.classList.remove('hover:bg-gray-100');
+                    e.target.classList.add('bg-blue-600', 'text-white');
+                    document.getElementById('inv_cabinet').value = e.target.dataset.value;
+                });
+
+                // Shelf Buttons
+                document.getElementById('inv_shelfButtons').addEventListener('click', (e) => {
+                    if(!e.target.classList.contains('inv-btn-choice')) return;
+                    document.querySelectorAll('#inv_shelfButtons .inv-btn-choice').forEach(b => {
+                        b.classList.remove('bg-blue-600', 'text-white');
+                        b.classList.add('hover:bg-gray-100');
+                    });
+                    e.target.classList.remove('hover:bg-gray-100');
+                    e.target.classList.add('bg-blue-600', 'text-white');
+                    document.getElementById('inv_shelf').value = e.target.dataset.value;
+                });
+
+                document.getElementById('inv_search').addEventListener('input', () => this.render());
+                document.getElementById('inv_clearBtn').addEventListener('click', () => this.clearForm());
+                
+                document.getElementById('inv_form').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const id = document.getElementById('inv_editDocId').value;
+                    const data = {
+                        cabinet: document.getElementById('inv_cabinet').value,
+                        shelf: document.getElementById('inv_shelf').value,
+                        item: document.getElementById('inv_item').value,
+                        quantity: Number(document.getElementById('inv_quantity').value),
+                        earliestExpiration: document.getElementById('inv_expiration').value,
+                        notes: document.getElementById('inv_notes').value,
+                        lastUpdated: serverTimestamp()
+                    };
+
+                    try {
+                        if(id) {
+                            await setDoc(doc(db, 'supplies', id), data, {merge:true});
+                            this.logTransaction(data.item, 'Edit/Update', data.quantity);
+                        } else {
+                            await addDoc(collection(db, 'supplies'), data);
+                            this.logTransaction(data.item, 'New Item Added', data.quantity);
+                        }
+                        this.clearForm();
+                        this.showMsg('Saved!', false);
+                    } catch(err) {
+                        console.error(err);
+                        this.showMsg(err.message, true);
+                    }
+                });
+            },
+
+            clearForm: function() {
+                document.getElementById('inv_form').reset();
+                document.getElementById('inv_editDocId').value = '';
+                document.getElementById('inv_cabinet').value = '';
+                document.getElementById('inv_shelf').value = '';
+                document.querySelectorAll('.inv-btn-choice').forEach(b => {
+                    b.classList.remove('bg-blue-600', 'text-white');
+                    b.classList.add('hover:bg-gray-100');
+                });
+                document.getElementById('inv_submitBtn').textContent = 'Save';
+            },
+
+            openModal: function(id) {
+                this.selectedItem = this.data.find(i => i.id === id);
+                if(!this.selectedItem) return;
+                document.getElementById('modal_item_name').textContent = this.selectedItem.item;
+                document.getElementById('modal_action').classList.remove('hidden');
+                document.getElementById('modal_action').classList.add('flex');
+            },
+
+            editFromModal: function() {
+                const item = this.selectedItem;
+                document.getElementById('inv_editDocId').value = item.id;
+                document.getElementById('inv_item').value = item.item;
+                document.getElementById('inv_quantity').value = item.quantity;
+                document.getElementById('inv_expiration').value = item.earliestExpiration;
+                document.getElementById('inv_notes').value = item.notes;
+                
+                // Set Buttons
+                if(item.cabinet) {
+                    const btn = document.querySelector(`#inv_cabinetButtons button[data-value="${item.cabinet}"]`);
+                    if(btn) btn.click();
+                }
+                if(item.shelf) {
+                    const btn = document.querySelector(`#inv_shelfButtons button[data-value="${item.shelf}"]`);
+                    if(btn) btn.click();
+                }
+
+                document.getElementById('inv_submitBtn').textContent = 'Update';
+                document.getElementById('modal_action').classList.add('hidden');
+                document.getElementById('modal_action').classList.remove('flex');
+            },
+
+            deleteFromModal: function() {
+                document.getElementById('modal_action').classList.add('hidden');
+                document.getElementById('modal_action').classList.remove('flex');
+                document.getElementById('modal_confirm').classList.remove('hidden');
+                document.getElementById('modal_confirm').classList.add('flex');
+            },
+
+            confirmDelete: async function() {
+                if(this.selectedItem) {
+                    await deleteDoc(doc(db, 'supplies', this.selectedItem.id));
+                    this.logTransaction(this.selectedItem.item, 'Deleted', 0);
+                    this.selectedItem = null;
+                }
+                document.getElementById('modal_confirm').classList.add('hidden');
+                document.getElementById('modal_confirm').classList.remove('flex');
+            },
+
+            logTransaction: async function(item, reason, qty) {
+                await addDoc(collection(db, 'transactions'), {
+                    item: item,
+                    reason: reason,
+                    quantityTaken: qty,
+                    loggedAt: serverTimestamp(),
+                    person: currentUser ? currentUser.uid.slice(0, 6) : 'Anon'
+                });
+            },
+
+            exportCSV: function() {
+                const csv = Papa.unparse(this.data.map(i => ({
+                    Cabinet: i.cabinet,
+                    Shelf: i.shelf,
+                    Item: i.item,
+                    Qty: i.quantity,
+                    Exp: i.earliestExpiration,
+                    Notes: i.notes
+                })));
+                this.downloadFile(csv, 'inventory_export.csv');
+            },
+
+            downloadFile: function(content, name) {
+                const blob = new Blob([content], {type: 'text/csv;charset=utf-8;'});
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = name;
+                link.click();
+            },
+            
+            showMsg: function(txt, err) {
+                const el = document.getElementById('inv_message');
+                el.textContent = txt;
+                el.className = `p-2 text-sm text-center rounded ${err ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`;
+                el.classList.remove('hidden');
+                setTimeout(() => el.classList.add('hidden'), 3000);
+            }
+        };
+
+        // Attach Modal Events
+        document.getElementById('modal_btn_edit').addEventListener('click', () => InventoryApp.editFromModal());
+        document.getElementById('modal_btn_delete').addEventListener('click', () => InventoryApp.deleteFromModal());
+        document.getElementById('modal_btn_cancel').addEventListener('click', () => {
+            document.getElementById('modal_action').classList.add('hidden');
+            document.getElementById('modal_action').classList.remove('flex');
+        });
+        document.getElementById('modal_conf_delete').addEventListener('click', () => InventoryApp.confirmDelete());
+        document.getElementById('modal_conf_cancel').addEventListener('click', () => {
+             document.getElementById('modal_confirm').classList.add('hidden');
+             document.getElementById('modal_confirm').classList.remove('flex');
+        });
+
+
+        /* ================= TRANSACTION MODULE ================= */
+        const TransactionApp = {
+            listener: null,
+            data: [],
+            
+            init: function() {
+                if(this.listener) return;
+                const q = query(collection(db, 'transactions'), orderBy('loggedAt', 'desc'), limit(100));
+                document.getElementById('trans_loading').classList.remove('hidden');
+                
+                this.listener = onSnapshot(q, (snap) => {
+                    this.data = snap.docs.map(d => d.data());
+                    this.render();
+                    document.getElementById('trans_loading').classList.add('hidden');
+                });
+                
+                ['trans_search', 'trans_start', 'trans_end'].forEach(id => {
+                    document.getElementById(id).addEventListener('input', () => this.render());
+                });
+            },
+
+            render: function() {
+                const search = document.getElementById('trans_search').value.toLowerCase();
+                const start = document.getElementById('trans_start').value;
+                const end = document.getElementById('trans_end').value;
+
+                const filtered = this.data.filter(t => {
+                    const d = t.loggedAt ? t.loggedAt.toDate() : new Date(0);
+                    const txtMatch = (t.item||'').toLowerCase().includes(search) || (t.reason||'').toLowerCase().includes(search);
+                    let dateMatch = true;
+                    if(start && d < new Date(start)) dateMatch = false;
+                    if(end) {
+                        const endDate = new Date(end);
+                        endDate.setHours(23,59,59);
+                        if(d > endDate) dateMatch = false;
+                    }
+                    return txtMatch && dateMatch;
+                });
+
+                document.getElementById('trans_tableBody').innerHTML = filtered.map(t => {
+                    const date = t.loggedAt ? t.loggedAt.toDate().toLocaleString() : 'N/A';
+                    return `
+                        <tr class="hover:bg-gray-50">
+                            <td class="p-3 text-gray-500 whitespace-nowrap">${date}</td>
+                            <td class="p-3 font-medium text-gray-900">${t.item || '?'}</td>
+                            <td class="p-3 text-gray-700">${t.quantityTaken || ''}</td>
+                            <td class="p-3 text-gray-500">${t.reason || ''}</td>
+                            <td class="p-3 text-gray-400 text-xs font-mono">${t.person || 'Anon'}</td>
+                        </tr>
+                    `;
+                }).join('');
+            },
+
+            downloadCSV: function() {
+                const csv = Papa.unparse(this.data.map(t => ({
+                    Date: t.loggedAt ? t.loggedAt.toDate().toLocaleString() : '',
+                    Item: t.item,
+                    Qty: t.quantityTaken,
+                    Reason: t.reason,
+                    User: t.person
+                })));
+                InventoryApp.downloadFile(csv, 'transactions.csv');
+            }
+        };
+
+        /* ================= DRUG BAG MODULE ================= */
+        const DrugBagApp = {
+            listener: null,
+            data: [],
+
+            init: function() {
+                if(this.listener) return;
+                const q = query(collection(db, 'exchanges'), orderBy('timestamp', 'desc'), limit(100));
+                document.getElementById('db_loading').style.display = 'block';
+
+                this.listener = onSnapshot(q, (snap) => {
+                    this.data = snap.docs.map(d => d.data());
+                    this.populateFilters();
+                    this.render();
+                    document.getElementById('db_loading').style.display = 'none';
+                });
+
+                document.getElementById('db_search').addEventListener('input', () => this.render());
+                document.getElementById('db_facilityFilter').addEventListener('change', () => this.render());
+                document.getElementById('db_startDate').addEventListener('change', () => this.render());
+                document.getElementById('db_endDate').addEventListener('change', () => this.render());
+                // Import listener removed
+            },
+
+            populateFilters: function() {
+                const facilities = [...new Set(this.data.map(i => i.facility).filter(Boolean))].sort();
+                const sel = document.getElementById('db_facilityFilter');
+                sel.innerHTML = '<option value="">All Facilities</option>' + facilities.map(f => `<option value="${f}">${f}</option>`).join('');
+            },
+
+            render: function() {
+                const search = document.getElementById('db_search').value.toLowerCase();
+                const fac = document.getElementById('db_facilityFilter').value;
+                const startDate = document.getElementById('db_startDate').value;
+                const endDate = document.getElementById('db_endDate').value;
+
+                const filtered = this.data.filter(i => {
+                    const txtMatch = (i.oldBagNumber||'').toLowerCase().includes(search) || (i.newBagNumber||'').toLowerCase().includes(search);
+                    const facMatch = !fac || i.facility === fac;
+                    let dateMatch = true;
+                    if(i.timestamp) {
+                        const d = i.timestamp.toDate ? i.timestamp.toDate() : new Date(i.timestamp);
+                        if (startDate) {
+                            const start = new Date(startDate + 'T00:00:00');
+                            if (d < start) dateMatch = false;
+                        }
+                        if (endDate) {
+                            const end = new Date(endDate + 'T23:59:59');
+                            if (d > end) dateMatch = false;
+                        }
+                    }
+                    return txtMatch && facMatch && dateMatch;
+                });
+
+                document.getElementById('db_tableBody').innerHTML = filtered.map(i => {
+                    const ts = i.timestamp && i.timestamp.toDate ? i.timestamp.toDate().toLocaleString() : 'N/A';
+                    return `
+                        <tr class="bg-white border-b hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap">${ts}</td>
+                            <td class="px-6 py-4 font-mono text-gray-600">${i.oldBagNumber || '-'}</td>
+                            <td class="px-6 py-4 font-mono font-bold text-blue-600">${i.newBagNumber || '-'}</td>
+                            <td class="px-6 py-4 text-gray-600">${i.reason || '-'}</td>
+                            <td class="px-6 py-4">${i.facility || '-'}</td>
+                            <td class="px-6 py-4 text-xs text-gray-500">${i.submittedBy || ''}</td>
+                        </tr>
+                    `;
+                }).join('');
+            },
+
+            printReport: function() {
+                // Re-run filter logic to get current data view
+                const search = document.getElementById('db_search').value.toLowerCase();
+                const fac = document.getElementById('db_facilityFilter').value;
+                const startDate = document.getElementById('db_startDate').value;
+                const endDate = document.getElementById('db_endDate').value;
+
+                const filtered = this.data.filter(i => {
+                    const txtMatch = (i.oldBagNumber||'').toLowerCase().includes(search) || (i.newBagNumber||'').toLowerCase().includes(search);
+                    const facMatch = !fac || i.facility === fac;
+                    let dateMatch = true;
+                    if(i.timestamp) {
+                        const d = i.timestamp.toDate ? i.timestamp.toDate() : new Date(i.timestamp);
+                        if (startDate) {
+                            const start = new Date(startDate + 'T00:00:00');
+                            if (d < start) dateMatch = false;
+                        }
+                        if (endDate) {
+                            const end = new Date(endDate + 'T23:59:59');
+                            if (d > end) dateMatch = false;
+                        }
+                    }
+                    return txtMatch && facMatch && dateMatch;
+                });
+
+                // Open print window
+                const win = window.open('', '_blank');
+                win.document.write(`
+                    <html>
+                    <head>
+                        <title>Drug Bag Exchange Report</title>
+                        <style>
+                            body { font-family: sans-serif; padding: 20px; }
+                            table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 12px; }
+                            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                            th { background-color: #f3f4f6; }
+                            .header { text-align: center; margin-bottom: 20px; }
+                            .logo { max-height: 100px; margin-bottom: 10px; }
+                            .meta { font-size: 12px; color: #666; text-align: right; }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="header">
+                            <img src="https://i.ibb.co/WX2kv4q/logo750x750.png" class="logo">
+                            <h2>Drug Bag Exchange Report</h2>
+                        </div>
+                        <div class="meta">
+                            Generated on: ${new Date().toLocaleString()}<br>
+                            Count: ${filtered.length} records
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Old Bag</th>
+                                    <th>New Bag</th>
+                                    <th>Reason</th>
+                                    <th>Facility</th>
+                                    <th>Submitted By</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${filtered.map(i => {
+                                    const ts = i.timestamp && i.timestamp.toDate ? i.timestamp.toDate().toLocaleString() : 'N/A';
+                                    return `
+                                        <tr>
+                                            <td>${ts}</td>
+                                            <td>${i.oldBagNumber || '-'}</td>
+                                            <td>${i.newBagNumber || '-'}</td>
+                                            <td>${i.reason || '-'}</td>
+                                            <td>${i.facility || '-'}</td>
+                                            <td>${i.submittedBy || ''}</td>
+                                        </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                        <script>window.print();<\/script>
+                    </body>
+                    </html>
+                `);
+                win.document.close();
+            }
+        };
+
+        /* ================= OXYGEN MODULE ================= */
+        const OxygenApp = {
+            listener: null,
+
+            init: function() {
+                if(this.listener) return;
+                const q = query(collection(db, "oxygen_logs"), orderBy("createdAt", "desc"), limit(50));
+                document.getElementById('ox_loading').classList.remove('hidden');
+                
+                this.listener = onSnapshot(q, (snapshot) => {
+                    const mainTbody = document.getElementById('ox_mainTable');
+                    const portableTbody = document.getElementById('ox_portableTable');
+                    mainTbody.innerHTML = '';
+                    portableTbody.innerHTML = '';
+
+                    snapshot.forEach(doc => {
+                        const d = doc.data();
+                        const issueClass = (d.issues && d.issues.length > 1) ? "text-red-600 font-bold bg-red-50" : "text-gray-500";
+                        
+                        if(d.logType === 'Main Tank') {
+                            mainTbody.innerHTML += `
+                                <tr class="hover:bg-gray-50 border-b">
+                                    <td class="px-4 py-3 whitespace-nowrap text-gray-700">${d.dateTime}</td>
+                                    <td class="px-4 py-3 font-medium">${d.member}</td>
+                                    <td class="px-4 py-3 font-bold text-blue-700">${d.newPsi || '-'}</td>
+                                    <td class="px-4 py-3 text-gray-600">${d.oldPsi || '-'}</td>
+                                    <td class="px-4 py-3 ${issueClass}">${d.issues || 'None'}</td>
+                                </tr>
+                            `;
+                        } else {
+                            portableTbody.innerHTML += `
+                                <tr class="hover:bg-gray-50 border-b">
+                                    <td class="px-4 py-3 whitespace-nowrap text-gray-700">${d.dateTime}</td>
+                                    <td class="px-4 py-3 font-bold text-green-700">${d.portableNumber || '-'}</td>
+                                    <td class="px-4 py-3 text-xs">PSI: ${d.cyl1Psi || '-'}</td>
+                                    <td class="px-4 py-3 text-xs">PSI: ${d.cyl2Psi || '-'}</td>
+                                    <td class="px-4 py-3 text-gray-600">${d.member}</td>
+                                </tr>
+                            `;
+                        }
+                    });
+                    document.getElementById('ox_loading').classList.add('hidden');
+                });
+                
+                document.getElementById('ox_csvInput').addEventListener('change', (e) => this.handleImport(e));
+            },
+
+            switchTab: function(tabName) {
+                const mainTab = document.getElementById('ox-tab-main');
+                const portTab = document.getElementById('ox-tab-portable');
+                const mainView = document.getElementById('ox-view-main');
+                const portView = document.getElementById('ox-view-portable');
+
+                if(tabName === 'main') {
+                    // Styles
+                    mainTab.classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
+                    mainTab.classList.remove('text-gray-500');
+                    portTab.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
+                    portTab.classList.add('text-gray-500');
+                    
+                    // Visibility
+                    mainView.classList.remove('hidden');
+                    portView.classList.add('hidden');
+                } else {
+                    // Styles
+                    portTab.classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
+                    portTab.classList.remove('text-gray-500');
+                    mainTab.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
+                    mainTab.classList.add('text-gray-500');
+
+                    // Visibility
+                    portView.classList.remove('hidden');
+                    mainView.classList.add('hidden');
+                }
+            },
+
+            handleImport: function(e) {
+                const file = e.target.files[0];
+                if(!file) return;
+
+                const status = document.getElementById('ox_importStatus');
+                const bar = document.getElementById('ox_progressBar');
+                status.classList.remove('hidden');
+                
+                const reader = new FileReader();
+                reader.onload = async (evt) => {
+                    const lines = evt.target.result.split(/\r?\n/);
+                    const total = lines.length;
+                    
+                    // Simple logic to detect type based on header
+                    const header = lines[0];
+                    const isMain = header.includes("New Main PSI");
+
+                    for(let i=1; i<lines.length; i++) {
+                        if(!lines[i].trim()) continue;
+                        // CSV parsing logic simplified for brevity (splitting by comma)
+                        // In production, use PapaParse here too like DrugBag module
+                        const cols = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(s => s.replace(/^"|"$/g, '').trim());
+                        
+                        // Map cols based on index (assuming standard export format from user's file)
+                        // This logic mirrors the user's original file index logic
+                        // We'll use a safer approach: just grab what we can
+                        
+                        const data = {
+                            createdAt: serverTimestamp(),
+                            dateTime: cols[0], // Date Submitted
+                            member: cols[1], // Member
+                            issues: cols[cols.length-1], // Issues usually last
+                            logType: isMain ? "Main Tank" : "Portable Bottle"
+                        };
+
+                        if(isMain) {
+                            // Map specific indices for Main Tank based on standard forms
+                            // Adjust indices based on actual CSV structure
+                            data.newPsi = cols[4];
+                            data.oldPsi = cols[5];
+                        } else {
+                             data.portableNumber = cols[2];
+                             data.cyl1Psi = cols[5];
+                             data.cyl2Psi = cols[8];
+                        }
+
+                        await addDoc(collection(db, "oxygen_logs"), data);
+                        bar.style.width = Math.round((i/total)*100) + "%";
+                    }
+                    status.classList.add('hidden');
+                    alert("Oxygen logs imported.");
+                    e.target.value = '';
+                };
+                reader.readAsText(file);
+            }
+        };
+
+        // --- AUTH & INIT ---
+        onAuthStateChanged(auth, async (user) => {
+            const statusEl = document.getElementById('userStatus');
+            if (user) {
+                currentUser = user;
+                statusEl.textContent = `User: ${user.uid.slice(0,5)}...`;
+                statusEl.classList.add('text-green-600');
+                
+                // Initialize current view if needed
+                if(Router.current === 'inventory') InventoryApp.init();
+            } else {
+                statusEl.textContent = 'Authenticating...';
+                // Auto Sign-in
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            }
+        });
+        
+        // Expose apps to window
+        window.InventoryApp = InventoryApp;
+        window.TransactionApp = TransactionApp;
+        window.DrugBagApp = DrugBagApp;
+        window.OxygenApp = OxygenApp;
+
+        // Default Router State
+        Router.navigate('dashboard');
+
+    </script>
+</body>
+</html>
