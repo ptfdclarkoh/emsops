@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1">
-    <title>75 EMS Central Hub</title>
+    <title>EMS OPS ADMIN</title>
+    <link rel="icon" type="image/x-icon" href="./assets/favicon.ico">
     
     <!-- PWA Settings -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="75 EMS HUB">
+    <meta name="apple-mobile-web-app-title" content="EMS ADMIN">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <link rel="apple-touch-icon" sizes="180x180" href="./assets/apple-touch-icon4.png">
 
@@ -24,13 +25,6 @@
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background-color: #f3f4f6;
-        }
-
-        /* Custom styles for date and time inputs to ensure proper sizing */
-        input[type="date"], input[type="datetime-local"] {
-            width: 90%; /* Reverts to the browser's default sizing */
-            max-width: 100%; /* Ensures it doesn't exceed its container */
-            box-sizing: border-box;
         }
         
         /* Custom Scrollbar for Sidebar */
@@ -72,6 +66,12 @@
             from { opacity: 0; transform: translateY(5px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        /* Custom styles for date and time inputs to ensure proper sizing */
+        input[type="date"], input[type="datetime-local"] {
+            width: 90%; /* Reverts to the browser's default sizing */
+            max-width: 100%; /* Ensures it doesn't exceed its container */
+            box-sizing: border-box;
+        }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden text-gray-800">
@@ -85,7 +85,8 @@
     <!-- Mobile Header (Visible only on small screens) -->
     <div class="fixed w-full z-30 flex bg-white border-b p-4 md:hidden items-center justify-between h-16">
         <div class="flex items-center font-bold text-xl text-gray-800">
-            <i class="fa-solid fa-star-of-life text-blue-600 mr-2"></i> 75 EMS
+            <img src="https://i.ibb.co/n8R3dn8f/apple-touch-icon4.png" alt="Logo" class="h-8 w-8 object-contain mr-2">
+            Medic 75
         </div>
         <button id="mobileMenuBtn" class="text-gray-500 hover:text-gray-900 focus:outline-none">
             <i class="fa-solid fa-bars text-2xl"></i>
@@ -95,8 +96,8 @@
     <!-- Sidebar Navigation -->
     <aside id="sidebar" class="bg-white border-r w-64 flex-shrink-0 fixed md:static h-full z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col">
         <div class="h-16 flex items-center px-6 border-b">
-            <i class="fa-solid fa-star-of-life text-blue-600 text-2xl mr-3"></i>
-            <span class="text-xl font-bold text-gray-800">Operations Hub</span>
+            <img src="https://i.ibb.co/n8R3dn8f/apple-touch-icon4.png" alt="Logo" class="h-8 w-8 object-contain mr-3">
+            <span class="text-xl font-bold text-gray-800">EMS OPS ADMIN</span>
         </div>
 
         <div class="flex-1 overflow-y-auto no-scrollbar py-4">
@@ -156,7 +157,7 @@
         <!-- === VIEW: DASHBOARD === -->
         <div id="view-dashboard" class="view-section active p-6 max-w-7xl mx-auto">
             <h1 class="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
-            <p class="text-gray-500 mb-8">Welcome to the Pleasant Township EMS Central Operations Hub</p>
+            <p class="text-gray-500 mb-8">Welcome to the Pleasant Township EMS Operations Admin Hub</p>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <!-- Card 1 -->
@@ -829,15 +830,27 @@
                     return (a.item||'').localeCompare(b.item||'');
                 });
 
-                tbody.innerHTML = filtered.map(item => `
+                tbody.innerHTML = filtered.map(item => {
+                    // Format Date YYYY-MM-DD to MM/DD/YYYY
+                    let expDisplay = '-';
+                    if (item.earliestExpiration) {
+                        const parts = item.earliestExpiration.split('-');
+                        if (parts.length === 3) {
+                            expDisplay = `${parts[1]}/${parts[2]}/${parts[0]}`;
+                        } else {
+                            expDisplay = item.earliestExpiration;
+                        }
+                    }
+
+                    return `
                     <tr class="hover:bg-gray-50 cursor-pointer text-sm" onclick="InventoryApp.openModal('${item.id}')">
                         <td class="px-3 py-2 font-mono text-gray-600">${item.cabinet || '-'}-${item.shelf || '-'}</td>
                         <td class="px-3 py-2 font-semibold text-gray-900">${item.item || '?'}</td>
                         <td class="px-3 py-2 text-gray-700">${item.quantity ?? '-'}</td>
-                        <td class="px-3 py-2 ${this.checkExp(item.earliestExpiration)}">${item.earliestExpiration || '-'}</td>
+                        <td class="px-3 py-2 ${this.checkExp(item.earliestExpiration)}">${expDisplay}</td>
                         <td class="px-3 py-2 text-gray-500 truncate max-w-[150px]">${item.notes || ''}</td>
                     </tr>
-                `).join('');
+                `}).join('');
                 
                 if(filtered.length === 0) tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400">No items found.</td></tr>`;
             },
