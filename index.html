@@ -1148,14 +1148,26 @@
 
             openReportModal: function() {
                 const filtered = this.getFilteredData();
-                const html = this.generateReportHTML(filtered);
+                const search = document.getElementById('trans_search').value;
+                const start = document.getElementById('trans_start').value;
+                const end = document.getElementById('trans_end').value;
+
+                const html = this.generateReportHTML(filtered, search, start, end);
                 document.getElementById('report_preview_body').innerHTML = html;
                 document.getElementById('modal_report').classList.remove('hidden');
             },
 
-            generateReportHTML: function(filteredData) {
+            generateReportHTML: function(filteredData, search, start, end) {
                 const now = new Date();
                 const reportDate = now.toLocaleString('en-US', { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
+                
+                let filterTextParts = [];
+                if(search) filterTextParts.push(`Search: "${search}"`);
+                if(start || end) filterTextParts.push(`Date Range: ${start || 'Start'} to ${end || 'Present'}`);
+                
+                const filterText = filterTextParts.length > 0 
+                    ? `Filters: ${filterTextParts.join(' | ')}` 
+                    : "Filters: Showing All Records";
 
                 return `
                     <div style="font-family: sans-serif; color: #333;">
@@ -1163,7 +1175,8 @@
                             <img src="https://i.ibb.co/WX2kv4q/logo750x750.png" style="max-height: 120px; margin: 0 auto 15px auto; display: block;">
                             <h2 style="font-size: 24px; font-weight: bold; margin: 0;">Supply Transaction Report</h2>
                             <p style="color: #666; font-size: 14px; margin-top: 5px;">Generated on: ${reportDate}</p>
-                            <p style="color: #666; font-size: 14px;">Total Records: ${filteredData.length}</p>
+                            <p style="color: #666; font-size: 14px; margin-top: 2px; font-style: italic;">${filterText}</p>
+                            <p style="color: #333; font-size: 14px; font-weight: bold; margin-top: 5px;">Total Records: ${filteredData.length}</p>
                         </div>
                         <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
                             <thead>
@@ -1277,9 +1290,18 @@
                 }).join('');
             },
 
-            generateReportHTML: function(filteredData) {
+            generateReportHTML: function(filteredData, search, fac, start, end) {
                 const now = new Date();
                 const reportDate = now.toLocaleString('en-US', { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
+
+                let filterTextParts = [];
+                if(search) filterTextParts.push(`Bag Search: "${search}"`);
+                if(fac) filterTextParts.push(`Facility: "${fac}"`);
+                if(start || end) filterTextParts.push(`Date Range: ${start || 'Start'} to ${end || 'Present'}`);
+                
+                const filterText = filterTextParts.length > 0 
+                    ? `Filters: ${filterTextParts.join(' | ')}` 
+                    : "Filters: Showing All Records";
 
                 return `
                     <div style="font-family: sans-serif; color: #333;">
@@ -1287,7 +1309,8 @@
                             <img src="https://i.ibb.co/WX2kv4q/logo750x750.png" style="max-height: 120px; margin: 0 auto 15px auto; display: block;">
                             <h2 style="font-size: 24px; font-weight: bold; margin: 0;">Drug Bag Exchange Report</h2>
                             <p style="color: #666; font-size: 14px; margin-top: 5px;">Generated on: ${reportDate}</p>
-                            <p style="color: #666; font-size: 14px;">Total Records: ${filteredData.length}</p>
+                            <p style="color: #666; font-size: 14px; margin-top: 2px; font-style: italic;">${filterText}</p>
+                            <p style="color: #333; font-size: 14px; font-weight: bold; margin-top: 5px;">Total Records: ${filteredData.length}</p>
                         </div>
                         <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
                             <thead>
@@ -1325,7 +1348,12 @@
 
             openReportModal: function() {
                 const filtered = this.getFilteredData();
-                const html = this.generateReportHTML(filtered);
+                const search = document.getElementById('db_search').value;
+                const fac = document.getElementById('db_facilityFilter').value;
+                const start = document.getElementById('db_startDate').value;
+                const end = document.getElementById('db_endDate').value;
+
+                const html = this.generateReportHTML(filtered, search, fac, start, end);
                 document.getElementById('report_preview_body').innerHTML = html;
                 document.getElementById('modal_report').classList.remove('hidden');
             },
@@ -1450,21 +1478,32 @@
             openReportModal: function() {
                 // Filter based on active tab AND current filters
                 const filteredAll = this.getFilteredData();
+                const search = document.getElementById('ox_search').value;
+                const start = document.getElementById('ox_startDate').value;
+                const end = document.getElementById('ox_endDate').value;
                 
                 const filteredTab = filteredAll.filter(d => {
                     if(this.currentTab === 'main') return d.logType === 'Main Tank';
                     return d.logType !== 'Main Tank'; // Assume Portable
                 });
                 
-                const html = this.generateReportHTML(filteredTab);
+                const html = this.generateReportHTML(filteredTab, search, start, end);
                 document.getElementById('report_preview_body').innerHTML = html;
                 document.getElementById('modal_report').classList.remove('hidden');
             },
 
-            generateReportHTML: function(filteredData) {
+            generateReportHTML: function(filteredData, search, start, end) {
                 const now = new Date();
                 const reportDate = now.toLocaleString('en-US', { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
                 const title = this.currentTab === 'main' ? 'Oxygen Tracker - Main Tank' : 'Oxygen Tracker - Portable Bottles';
+
+                let filterTextParts = [];
+                if(search) filterTextParts.push(`Search: "${search}"`);
+                if(start || end) filterTextParts.push(`Date Range: ${start || 'Start'} to ${end || 'Present'}`);
+                
+                const filterText = filterTextParts.length > 0 
+                    ? `Filters: ${filterTextParts.join(' | ')}` 
+                    : "Filters: Showing All Records";
 
                 let tableHead = '';
                 if(this.currentTab === 'main') {
@@ -1495,7 +1534,8 @@
                             <img src="https://i.ibb.co/WX2kv4q/logo750x750.png" style="max-height: 120px; margin: 0 auto 15px auto; display: block;">
                             <h2 style="font-size: 24px; font-weight: bold; margin: 0;">${title}</h2>
                             <p style="color: #666; font-size: 14px; margin-top: 5px;">Generated on: ${reportDate}</p>
-                            <p style="color: #666; font-size: 14px;">Total Records: ${filteredData.length}</p>
+                            <p style="color: #666; font-size: 14px; margin-top: 2px; font-style: italic;">${filterText}</p>
+                            <p style="color: #333; font-size: 14px; font-weight: bold; margin-top: 5px;">Total Records: ${filteredData.length}</p>
                         </div>
                         <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
                             <thead style="background-color: #f3f4f6;">
@@ -1529,6 +1569,10 @@
                         </table>
                     </div>
                 `;
+            },
+            
+            handleImport: function(e) {
+                // ... removed previous import logic ...
             }
         };
 
@@ -1644,7 +1688,7 @@
                     return p.length === 3 ? `${p[1]}/${p[2]}/${p[0]}` : d;
                 };
 
-                let dateRangeText = "Date Range: All Records";
+                let dateRangeText = "Filters: Showing All Records";
                 if (startDate && endDate) dateRangeText = `Date Range: ${fmt(startDate)} - ${fmt(endDate)}`;
                 else if (startDate) dateRangeText = `Date Range: Since ${fmt(startDate)}`;
                 else if (endDate) dateRangeText = `Date Range: Until ${fmt(endDate)}`;
@@ -1655,8 +1699,8 @@
                             <img src="https://i.ibb.co/WX2kv4q/logo750x750.png" style="max-height: 120px; margin: 0 auto 15px auto; display: block;">
                             <h2 style="font-size: 24px; font-weight: bold; margin: 0;">Drug Destruction Log Report</h2>
                             <p style="color: #666; font-size: 14px; margin-top: 5px;">Generated on: ${reportDate}</p>
-                            <p style="color: #666; font-size: 14px; margin-top: 2px;">${dateRangeText}</p>
-                            <p style="color: #666; font-size: 14px;">Records: ${data.length}</p>
+                            <p style="color: #666; font-size: 14px; margin-top: 2px; font-style: italic;">${dateRangeText}</p>
+                            <p style="color: #333; font-size: 14px; font-weight: bold; margin-top: 5px;">Total Records: ${data.length}</p>
                         </div>
                         <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
                             <thead>
