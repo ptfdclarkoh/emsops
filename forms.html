@@ -77,8 +77,9 @@
                     <span class="font-bold text-lg tracking-wide">EMS OPS</span>
                 </div>
                 <div class="flex items-center gap-4">
-                    <button onclick="app.navTo('hub')" id="nav-home-btn" class="hidden text-sm bg-slate-800 hover:bg-slate-700 px-3 py-2 rounded-md transition border border-slate-700">
-                        <i class="fa-solid fa-grid-2 mr-2"></i>Dashboard
+                    <button onclick="app.navTo('hub')" id="nav-home-btn" class="hidden flex items-center justify-center gap-2 text-sm bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-md transition border border-slate-700 shadow-sm">
+                        <i class="fa-solid fa-border-all"></i>
+                        <span>Dashboard</span>
                     </button>
                     <div class="flex items-center gap-2 bg-slate-800 px-3 py-1.5 rounded-full border border-slate-700">
                         <div id="status-indicator" class="w-2 h-2 rounded-full bg-red-500"></div>
@@ -90,7 +91,7 @@
     </nav>
 
     <!-- Main Container -->
-    <main class="flex-grow max-w-5xl mx-auto w-full p-4 sm:p-6">
+    <main class="flex-grow max-w-6xl mx-auto w-full p-4 sm:p-6">
         
         <!-- === VIEW: HUB DASHBOARD === -->
         <section id="view-hub" class="view-section active">
@@ -99,7 +100,24 @@
                 <p class="text-gray-500 mt-2">Select a module to begin</p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                
+                <!-- Card: Daily Check (Merged) -->
+                <div onclick="app.navTo('dailycheck')" class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md hover:border-indigo-300 cursor-pointer transition group relative overflow-hidden md:col-span-2 lg:col-span-1">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                        <i class="fa-solid fa-clipboard-check text-6xl text-indigo-600"></i>
+                    </div>
+                    <div class="flex items-center gap-4 mb-2 relative z-10">
+                        <div class="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center group-hover:bg-indigo-600 transition shadow-sm">
+                            <i class="fa-solid fa-clipboard-check text-indigo-600 text-xl group-hover:text-white transition"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800">Daily Medic Check</h3>
+                            <p class="text-sm text-gray-500">Morning apparatus checklist</p>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Card 1: Supply Log -->
                 <div onclick="app.navTo('supply')" class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md hover:border-blue-300 cursor-pointer transition group relative overflow-hidden">
                     <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
@@ -455,6 +473,39 @@
             </div>
         </section>
 
+        <!-- === VIEW: DAILY CHECK === -->
+        <section id="view-dailycheck" class="view-section">
+            <div class="max-w-4xl mx-auto">
+                <!-- Header -->
+                <div class="bg-blue-900 text-white p-6 rounded-t-xl shadow-lg flex justify-between items-center">
+                    <div>
+                        <h2 class="text-2xl font-bold uppercase tracking-wider">Medic 75 Daily Check</h2>
+                        <p class="text-blue-200 text-sm mt-1">Pleasant Township Fire Department</p>
+                    </div>
+                    <button onclick="app.navTo('hub')" class="text-blue-200 hover:text-white bg-blue-800 hover:bg-blue-700 p-2 rounded-full transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+                </div>
+                
+                <!-- Dynamic Content Container -->
+                <div class="bg-white p-6 rounded-b-xl shadow-lg border-b-4 border-blue-900">
+                    <div id="dailyCheckLoading" class="flex flex-col items-center justify-center py-12">
+                         <i class="fa-solid fa-circle-notch fa-spin text-4xl text-blue-600 mb-3"></i>
+                         <p class="text-gray-500">Loading Configuration...</p>
+                    </div>
+
+                    <form id="dailyCheckForm" class="hidden space-y-6">
+                        <div id="dailyCheckFormContainer">
+                            <!-- Fields Injected Here -->
+                        </div>
+
+                        <button type="submit" id="dailyCheckSubmitBtn" class="w-full bg-blue-900 text-white font-bold py-4 rounded-lg shadow hover:bg-blue-800 transition flex justify-center items-center gap-2">
+                            <span>Submit Checklist</span>
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
     </main>
 
     <!-- Global Toast Notification -->
@@ -502,7 +553,6 @@
         import { getFirestore, doc, collection, addDoc, updateDoc, setDoc, getDoc, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- Configuration ---
-        // RESTORED: User's specific Firebase credentials.
         const userConfig = {
             apiKey: "AIzaSyBTjbo2ndQYowrvmcDxeXfvNb_E3nSijH8",
             authDomain: "ems-inventory.firebaseapp.com",
@@ -513,12 +563,12 @@
             measurementId: "G-BFFXWP4G42"
         };
 
-        // Determine config to use: Preview Env or Hardcoded User Config
         const firebaseConfig = typeof __firebase_config !== 'undefined' 
             ? JSON.parse(__firebase_config) 
             : userConfig;
         
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        // FIX: Fallback to your actual app ID, not 'default-app-id'
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'ems-inventory';
 
         // Initialize Firebase
         const firebaseApp = initializeApp(firebaseConfig);
@@ -526,11 +576,7 @@
         const db = getFirestore(firebaseApp);
 
         // --- Utilities ---
-        
-        // Helper to get safe collection path compatible with the immersive environment
         const getColPath = (colName) => {
-            // If running in the specific preview env, use scoped paths. 
-            // If running locally (using userConfig), use root collections.
             if(typeof __app_id !== 'undefined') {
                 return `artifacts/${appId}/public/data/${colName}`;
             }
@@ -564,18 +610,15 @@
             }, 3000);
         };
 
-        // Fetch Member List (Cached)
         let memberCache = null;
         const loadMembers = async () => {
             if (memberCache) return memberCache;
-            
             try {
                 const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRc1IdR2_NZQjZZUxmHnCcaNpJCpiokXvQ1zHgRmWXkdXBydgZB15-eABGwb7eW4IIRz_m5nWWyXOxI/pub?gid=0&single=true&output=csv";
                 const resp = await fetch(sheetUrl);
                 const txt = await resp.text();
                 const lines = txt.split('\n');
                 const members = [];
-
                 for(let i=1; i<lines.length; i++) {
                     let name = lines[i].trim();
                     if(name.startsWith('"') && name.endsWith('"')) name = name.substring(1, name.length-1);
@@ -611,7 +654,6 @@
             init: async () => {
                 lucide.createIcons();
                 
-                // Auth Observer
                 onAuthStateChanged(auth, (user) => {
                     App.user = user;
                     const status = document.getElementById('user-status');
@@ -623,6 +665,8 @@
                         populateMemberSelects(); 
                         App.supply.loadInventory(); 
                         App.drugBag.loadBagStatus();
+                        // Preload Check config if user is connected
+                        App.dailyCheck.loadConfig();
                     } else {
                         status.textContent = 'Offline';
                         status.className = 'text-xs font-medium text-red-400';
@@ -630,7 +674,6 @@
                     }
                 });
 
-                // Sign In Logic
                 try {
                     if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                         await signInWithCustomToken(auth, __initial_auth_token);
@@ -639,14 +682,12 @@
                     }
                 } catch (e) { console.error("Auth Fail", e); }
 
-                // Setup Navigation
                 App.navTo('hub');
-                
-                // Init Sub-Modules
                 App.supply.init();
                 App.drugBag.init();
                 App.oxygen.init();
                 App.destroy.init();
+                App.dailyCheck.init();
             },
 
             navTo: (viewName) => {
@@ -655,12 +696,10 @@
                     if(el.id === `view-${viewName}`) el.classList.add('active');
                 });
                 
-                // Toggle Home Button
                 const homeBtn = document.getElementById('nav-home-btn');
                 if(viewName === 'hub') homeBtn.classList.add('hidden');
                 else homeBtn.classList.remove('hidden');
 
-                // Refresh Icons if needed
                 lucide.createIcons();
             },
 
@@ -668,7 +707,6 @@
             supply: {
                 inventory: [],
                 init: () => {
-                    // Item Selection Logic
                     const input = document.getElementById('supplyItemInput');
                     input.addEventListener('input', (e) => {
                         const val = e.target.value;
@@ -685,7 +723,6 @@
                         }
                     });
 
-                    // Reason Buttons
                     const container = document.getElementById('supplyReasonContainer');
                     const hidden = document.getElementById('supplyReasonInput');
                     container.addEventListener('click', (e) => {
@@ -696,7 +733,6 @@
                         }
                     });
 
-                    // Submit
                     document.getElementById('supplyForm').addEventListener('submit', App.supply.submit);
                 },
                 loadInventory: async () => {
@@ -737,13 +773,11 @@
                         if(!stockItem) throw new Error("Invalid Item - select from list");
                         if(qty > stockItem.quantity) throw new Error("Insuffient Stock");
 
-                        // Update Stock
                         await updateDoc(doc(db, getColPath('supplies'), stockItem.id), {
                             quantity: stockItem.quantity - qty,
                             lastUpdated: serverTimestamp()
                         });
 
-                        // Log Transaction
                         await addDoc(collection(db, getColPath('transactions')), {
                             item: itemVal,
                             quantityTaken: qty,
@@ -756,7 +790,7 @@
                         e.target.reset();
                         document.getElementById('supplyItemDetails').textContent = '';
                         document.querySelectorAll('#supplyReasonContainer .btn-choice').forEach(b => b.classList.remove('active'));
-                        App.supply.loadInventory(); // Refresh local cache
+                        App.supply.loadInventory(); 
 
                     } catch(err) {
                         showToast(err.message, 'error');
@@ -773,14 +807,12 @@
                 init: () => {
                     document.getElementById('drugBagForm').addEventListener('submit', App.drugBag.submit);
                     
-                    // Input auto-tabbing for Run Number
                     const p1 = document.getElementById('run-part-1');
                     const p2 = document.getElementById('run-part-2');
                     p1.addEventListener('input', () => { if(p1.value.length >= 2) p2.focus(); });
                     p2.addEventListener('keydown', (e) => { if(e.key === 'Backspace' && p2.value === '') p1.focus(); });
                 },
                 loadBagStatus: async () => {
-                    // Assuming structure: collections 'bags', doc 'Medic 75 - Bag 1'
                     const apparatus = "Medic 75";
                     ['Bag 1', 'Bag 2'].forEach(async (bag) => {
                         const label = document.getElementById(bag === 'Bag 1' ? 'label-bag1' : 'label-bag2');
@@ -813,13 +845,10 @@
                 },
                 selectReason: (reason) => {
                     document.getElementById('drugReasonInput').value = reason;
-                    
-                    // Visuals
                     document.querySelectorAll('.btn-reason').forEach(b => {
                         b.classList.remove('bg-blue-100', 'border-blue-500', 'text-blue-800');
                         if(b.textContent.includes(reason)) b.classList.add('bg-blue-100', 'border-blue-500', 'text-blue-800');
                     });
-
                     if(reason === 'Used') {
                         document.getElementById('modal-run').classList.remove('hidden');
                         document.getElementById('run-part-1').focus();
@@ -831,7 +860,6 @@
                     const p1 = document.getElementById('run-part-1').value;
                     const p2 = document.getElementById('run-part-2').value;
                     if(!p1 || !p2) return showToast("Incomplete Run #", "error");
-                    
                     const runNum = `${p1}-${p2}`;
                     document.getElementById('drugRunNumber').value = runNum;
                     document.getElementById('display-run').textContent = `Run: ${runNum}`;
@@ -840,7 +868,6 @@
                 confirmExpire: () => {
                     const date = document.getElementById('modal-expire-input').value;
                     if(!date) return showToast("Select Date", "error");
-                    
                     document.getElementById('drugOldExpiration').value = date;
                     document.getElementById('display-expired').textContent = `Exp: ${date}`;
                     document.getElementById('modal-expire').classList.add('hidden');
@@ -855,7 +882,6 @@
                     btn.textContent = "Submitting...";
 
                     try {
-                        // Gather Data
                         const bagId = document.getElementById('drugBagIdentifier').value;
                         const reason = document.getElementById('drugReasonInput').value;
                         const newBagNum = document.getElementById('drugNewBagNum').value;
@@ -881,10 +907,7 @@
                             timestamp: serverTimestamp()
                         };
 
-                        // 1. Add History Log
                         await addDoc(collection(db, getColPath('exchanges')), record);
-
-                        // 2. Update Current State
                         await setDoc(doc(db, getColPath('bags'), apparatus), {
                             apparatus,
                             bagNumber: newBagNum,
@@ -894,12 +917,11 @@
 
                         showToast("Exchange Recorded");
                         e.target.reset();
-                        // Reset UI Logic
                         App.drugBag.selectBag('Bag 1'); 
                         document.querySelectorAll('.btn-reason').forEach(b => b.classList.remove('active', 'bg-blue-100'));
                         document.getElementById('display-run').textContent = '';
                         document.getElementById('display-expired').textContent = '';
-                        App.drugBag.loadBagStatus(); // Refresh Labels
+                        App.drugBag.loadBagStatus(); 
 
                     } catch(err) {
                         showToast(err.message, "error");
@@ -961,7 +983,7 @@
                         await addDoc(collection(db, getColPath('oxygen_logs')), data);
                         showToast("Oxygen Logged");
                         e.target.reset();
-                        App.oxygen.toggleFields(); // Reset visibility defaults
+                        App.oxygen.toggleFields();
                     } catch(err) {
                         showToast(err.message, "error");
                     } finally {
@@ -1003,7 +1025,6 @@
                         await addDoc(collection(db, getColPath('drug_destruction_logs')), data);
                         showToast("Destruction Recorded");
                         
-                        // Clear sensitive fields only
                         document.getElementById('destDrugName').value = '';
                         document.getElementById('destStrength').value = '';
                         document.getElementById('destQty').value = '';
@@ -1014,6 +1035,281 @@
                         btn.disabled = false;
                         btn.innerHTML = originalContent;
                         lucide.createIcons();
+                    }
+                }
+            },
+
+            // --- MODULE 5: DAILY CHECK ---
+            dailyCheck: {
+                DEFAULT_CONFIG: {
+                    sections: [
+                        { id: "General", title: "Crew Information", fields: [
+                            {label: "Submitted By", name: "SubmittedBy", type: "text", width: "half"},
+                            {label: "Date", name: "Date", type: "date", width: "half"},
+                            {label: "Crew Member #1", name: "Crew1", type: "text", width: "half"},
+                            {label: "Crew Member #2", name: "Crew2", type: "text", width: "half"}
+                        ]},
+                        { id: "Cab", title: "Cab Checks", fields: [
+                            {label: "Mileage", name: "Mileage", type: "number", width: "third"},
+                            {label: "Fuel Level", name: "Fuel", type: "select", options: "Full,3/4,1/2,1/4,Empty", width: "third"},
+                            {label: "DEF Level", name: "DEF", type: "select", options: "Full,3/4,1/2,1/4,Empty", width: "third"},
+                            {label: "Door Opener", name: "DoorOpener", type: "checkbox", width: "quarter"},
+                            {label: "Truck Start", name: "TruckStart", type: "checkbox", width: "quarter"},
+                            {label: "Fuel Card", name: "FuelCard", type: "checkbox", width: "quarter"},
+                            {label: "Safety Vests (x3)", name: "SafetyVests", type: "checkbox", width: "quarter"},
+                            {label: "Gloves (S/M/L)", name: "Gloves", type: "checkbox", width: "quarter"},
+                            {label: "Ext. Lighting", name: "ExtLighting", type: "checkbox", width: "quarter"},
+                            {label: "Maps", name: "Maps", type: "checkbox", width: "quarter"},
+                            {label: "Report Pad", name: "ReportPad", type: "checkbox", width: "quarter"},
+                            {label: "Clean Interior", name: "CleanInterior", type: "checkbox", width: "quarter"}
+                        ]},
+                        { id: "Outside", title: "Outside Cabinets", fields: [
+                            {label: "Air Splints/Vacuum", name: "AirSplints", type: "checkbox", width: "third"},
+                            {label: "Mattresses/Mover", name: "Mattresses", type: "checkbox", width: "third"},
+                            {label: "Hand Tools/Flares", name: "HandTools", type: "checkbox", width: "third"},
+                            {label: "Flashlight", name: "Flashlight", type: "checkbox", width: "third"},
+                            {label: "4 Gas Meter", name: "GasMeter", type: "checkbox", width: "third"},
+                            {label: "LZ Light", name: "LZLight", type: "checkbox", width: "third"},
+                            {label: "Stair Chair", name: "StairChair", type: "checkbox", width: "third"},
+                            {label: "Backboards (3/1)", name: "Backboards", type: "checkbox", width: "third"},
+                            {label: "KED", name: "KED", type: "checkbox", width: "third"},
+                            {label: "Papoose", name: "Papoose", type: "checkbox", width: "third"},
+                            {label: "Cones", name: "Cones", type: "checkbox", width: "third"}
+                        ]},
+                        { id: "Drugs", title: "Drug Bag & Locked Cabinet", fields: [
+                            {label: "Drug Bag #1 ID", name: "Bag1ID", type: "text", width: "half"},
+                            {label: "Drug Bag #1 Exp", name: "Bag1Exp", type: "date", width: "half"},
+                            {label: "Drug Bag #2 ID", name: "Bag2ID", type: "text", width: "half"},
+                            {label: "Drug Bag #2 Exp", name: "Bag2Exp", type: "date", width: "half"},
+                            {label: "Syringe Box", name: "SyringeBox", type: "checkbox", width: "third"},
+                            {label: "MADs & BLS Epi", name: "MADs", type: "checkbox", width: "third"},
+                            {label: "Orange Bag", name: "OrangeBag", type: "checkbox", width: "third"},
+                            {label: "LevoPhed Bag", name: "LevoPhed", type: "checkbox", width: "third"},
+                            {label: "ALS Access Drugs", name: "ALSAccess", type: "checkbox", width: "third"},
+                            {label: "Cabinet Locked?", name: "CabinetLocked", type: "checkbox", width: "third"},
+                            {label: "# Albuterol", name: "CountAlbuterol", type: "number", width: "third"},
+                            {label: "# Atrovent", name: "CountAtrovent", type: "number", width: "third"},
+                            {label: "Main O2 PSI", name: "MainO2PSI", type: "number", width: "third"}
+                        ]},
+                        { id: "FirstIn", title: "First-In Bag", fields: [
+                            {label: "Glucometer Strip Exp", name: "GlucometerExp", type: "date", width: "half"},
+                            {label: "Glucometer > 5 Strips", name: "GlucometerCount", type: "checkbox", width: "half"},
+                            {label: "BP Cuff", name: "BPCuff", type: "checkbox", width: "third"},
+                            {label: "Stethoscope", name: "Steth", type: "checkbox", width: "third"},
+                            {label: "Peds Bag", name: "PedsBag", type: "checkbox", width: "third"},
+                            {label: "Lucas (Charged)", name: "Lucas", type: "checkbox", width: "third"},
+                            {label: "Assorted Bandages", name: "Bandages", type: "checkbox", width: "third"},
+                            {label: "Pulse Ox", name: "PulseOx", type: "checkbox", width: "third"}
+                        ]},
+                        { id: "Code", title: "Code Bag", fields: [
+                            {label: "BP Cuff/Steth", name: "BPCuff", type: "checkbox", width: "third"},
+                            {label: "Oral/Nasal Airways", name: "Airways", type: "checkbox", width: "third"},
+                            {label: "King Vision (Works)", name: "KingVision", type: "checkbox", width: "third"},
+                            {label: "Trauma Shears", name: "TraumaShears", type: "checkbox", width: "third"},
+                            {label: "Adult BVM", name: "BVM", type: "checkbox", width: "third"},
+                            {label: "Full Intubation Kit", name: "Intubation", type: "checkbox", width: "third"},
+                            {label: "IO (w/ needles)", name: "IO", type: "checkbox", width: "third"},
+                            {label: "Full IV Kit", name: "IVKit", type: "checkbox", width: "third"},
+                            {label: "Difficult Airway Kit", name: "DiffAirway", type: "checkbox", width: "third"},
+                            {label: "CAT TQs/Ring Cutter", name: "TQs", type: "checkbox", width: "third"},
+                            {label: "Decomp. Needles", name: "Needles", type: "checkbox", width: "third"},
+                            {label: "Glucometer Strip Exp", name: "GlucometerExp", type: "date", width: "half"},
+                            {label: "Glucose Earliest Exp", name: "GlucoseExp", type: "date", width: "half"}
+                        ]},
+                        { id: "IV", title: "IV Drawers", fields: [
+                            {label: "0.9% Normal Saline Exp", name: "NSExp", type: "date", width: "half"},
+                            {label: "10 / 60 Drop Sets Exp", name: "DropSetsExp", type: "date", width: "half"},
+                            {label: "x3 1000ml Bags", name: "NSCount", type: "checkbox", width: "half"},
+                            {label: "IV Sets Present", name: "SetsCount", type: "checkbox", width: "half"}
+                        ]},
+                        { id: "DriverF", title: "Driver Side Front", fields: [
+                            {label: "x2 CPAP Kits", name: "CPAP", type: "checkbox", width: "third"},
+                            {label: "EtCO2 Lines", name: "EtCO2", type: "checkbox", width: "third"},
+                            {label: "NCs/NRBs/Nebs", name: "Masks", type: "checkbox", width: "third"},
+                            {label: "Adult BVM", name: "BVM", type: "checkbox", width: "third"},
+                            {label: "J-Loops/Flushes", name: "Loops", type: "checkbox", width: "third"},
+                            {label: "IV Needles", name: "Needles", type: "checkbox", width: "third"},
+                            {label: "IV Dressings", name: "Dressings", type: "checkbox", width: "third"},
+                            {label: "Suction Supplies", name: "Suction", type: "checkbox", width: "third"},
+                            {label: "Pedi BVM", name: "PediBVM", type: "checkbox", width: "third"},
+                            {label: "Intubation Supp.", name: "Intubation", type: "checkbox", width: "third"},
+                            {label: "Drawer Locked?", name: "Locked", type: "checkbox", width: "third"}
+                        ]},
+                        { id: "Action", title: "Action Area", fields: [
+                            {label: "Portable Suction", name: "Suction", type: "checkbox", width: "third"},
+                            {label: "Protocol Book", name: "Protocol", type: "checkbox", width: "third"},
+                            {label: "Broselow Tape", name: "Broselow", type: "checkbox", width: "third"},
+                            {label: "Thermometer", name: "Therm", type: "checkbox", width: "third"},
+                            {label: "Trauma Shears", name: "Shears", type: "checkbox", width: "third"},
+                            {label: "Emesis Bags", name: "Emesis", type: "checkbox", width: "third"}
+                        ]},
+                        { id: "LP15", title: "Lifepak 15", fields: [
+                            {label: "Batteries Charged (>3)", name: "Batteries", type: "checkbox", width: "quarter"},
+                            {label: "Self-Test OK", name: "SelfTest", type: "checkbox", width: "quarter"},
+                            {label: "Paper OK", name: "Paper", type: "checkbox", width: "quarter"},
+                            {label: "4 & 12 Lead Cables", name: "Cables", type: "checkbox", width: "quarter"},
+                            {label: "Adult AED Pads Exp", name: "AdultPadsExp", type: "date", width: "half"},
+                            {label: "Pedi AED Pads Exp", name: "PediPadsExp", type: "date", width: "half"}
+                        ]},
+                        { id: "Rear", title: "Rear Cabinets & Bench", fields: [
+                            {label: "OB Kit", name: "OBKit", type: "checkbox", width: "third"},
+                            {label: "Assorted BP Cuffs", name: "BPCuffs", type: "checkbox", width: "third"},
+                            {label: "Burn Kit", name: "BurnKit", type: "checkbox", width: "third"},
+                            {label: "PPE", name: "PPE", type: "checkbox", width: "third"},
+                            {label: "Coban/Kerlix", name: "Coban", type: "checkbox", width: "third"},
+                            {label: "2x2/4x4/Band-Aids", name: "Bandages", type: "checkbox", width: "third"},
+                            {label: "Saline/Sterile H2O", name: "Saline", type: "checkbox", width: "third"},
+                            {label: "KTD", name: "KTD", type: "checkbox", width: "third"},
+                            {label: "SAM Pelvic", name: "Pelvic", type: "checkbox", width: "third"},
+                            {label: "Spare O2 Bottle", name: "SpareO2", type: "checkbox", width: "third"},
+                            {label: "Full Red IV Kit", name: "RedKit", type: "checkbox", width: "third"},
+                            {label: "Extra Adult Pads Exp", name: "ExtraAdultExp", type: "date", width: "half"},
+                            {label: "Extra Pedi Pads Exp", name: "ExtraPediExp", type: "date", width: "half"}
+                        ]},
+                        { id: "Cot", title: "Cot", fields: [
+                            {label: "Cot O2 PSI", name: "O2PSI", type: "number", width: "third"},
+                            {label: "Blankets/Towels/Sheets", name: "Linens", type: "checkbox", width: "third"},
+                            {label: "x2 NC/NRB", name: "Masks", type: "checkbox", width: "third"}
+                        ]},
+                        { id: "Footer", title: "Comments & Signatures", fields: [
+                            {label: "Problems or Concerns", name: "Comments", type: "textarea", width: "full"},
+                            {label: "Crew Signature #1", name: "Sig1", type: "text", width: "half"},
+                            {label: "Crew Signature #2", name: "Sig2", type: "text", width: "half"}
+                        ]}
+                    ]
+                },
+                init: () => {
+                    document.getElementById('dailyCheckForm').addEventListener('submit', App.dailyCheck.submit);
+                },
+                loadConfig: async () => {
+                    try {
+                        const loading = document.getElementById('dailyCheckLoading');
+                        const form = document.getElementById('dailyCheckForm');
+                        
+                        // FIX: Use artifacts/appId/public path structure EXPLICITLY to match your DB
+                        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'medic_75_config', 'form_structure');
+                        const snap = await getDoc(docRef);
+                        
+                        let config = App.dailyCheck.DEFAULT_CONFIG;
+                        if (snap.exists() && snap.data().sections && snap.data().sections.length > 0) {
+                            config = snap.data();
+                        }
+                        App.dailyCheck.render(config);
+                        
+                        loading.classList.add('hidden');
+                        form.classList.remove('hidden');
+
+                    } catch(e) {
+                        console.warn("Could not load dynamic config, using default", e);
+                        App.dailyCheck.render(App.dailyCheck.DEFAULT_CONFIG);
+                        document.getElementById('dailyCheckLoading').classList.add('hidden');
+                        document.getElementById('dailyCheckForm').classList.remove('hidden');
+                    }
+                },
+                render: (config) => {
+                    const container = document.getElementById('dailyCheckFormContainer');
+                    container.innerHTML = '';
+
+                    config.sections.forEach(section => {
+                        const sectionEl = document.createElement('div');
+                        sectionEl.className = "bg-gray-50 p-4 rounded-lg border border-gray-200 mb-6";
+                        sectionEl.innerHTML = `<h3 class="text-lg font-bold mb-4 border-b pb-2 text-blue-800 uppercase">${section.title}</h3>`;
+                        
+                        const grid = document.createElement('div');
+                        grid.className = "flex flex-wrap -mx-2"; 
+                        
+                        section.fields.forEach(field => {
+                            const fieldId = `${section.id}_${field.name}`;
+                            const wrapper = document.createElement('div');
+                            
+                            let widthClass = "w-full";
+                            if(field.width === 'half') widthClass = "w-full md:w-1/2";
+                            if(field.width === 'third') widthClass = "w-1/2 md:w-1/3";
+                            if(field.width === 'quarter') widthClass = "w-1/2 md:w-1/4";
+                            
+                            wrapper.className = `px-2 mb-4 ${widthClass}`;
+
+                            if (field.type === 'checkbox') {
+                                wrapper.innerHTML = `
+                                    <div class="flex items-center h-full pt-4">
+                                        <label class="flex items-center space-x-2 cursor-pointer p-3 bg-white border rounded hover:bg-gray-50 w-full hover:border-blue-300 transition">
+                                            <input type="checkbox" name="${fieldId}" class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 cursor-pointer">
+                                            <span class="text-sm font-medium text-gray-700 select-none">${field.label}</span>
+                                        </label>
+                                    </div>
+                                `;
+                            } else if (field.type === 'select') {
+                                const opts = field.options ? field.options.split(',') : [];
+                                const optsHtml = opts.map(o => `<option>${o.trim()}</option>`).join('');
+                                wrapper.innerHTML = `
+                                    <label class="block text-sm font-medium mb-1 text-gray-700">${field.label}</label>
+                                    <select name="${fieldId}" class="w-full border border-gray-300 rounded p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+                                        ${optsHtml}
+                                    </select>
+                                `;
+                            } else if (field.type === 'textarea') {
+                                wrapper.innerHTML = `
+                                    <label class="block text-sm font-medium mb-1 text-gray-700">${field.label}</label>
+                                    <textarea name="${fieldId}" rows="3" class="w-full border border-gray-300 rounded p-2 focus:ring-2 focus:ring-blue-500"></textarea>
+                                `;
+                            } else {
+                                wrapper.innerHTML = `
+                                    <label class="block text-sm font-medium mb-1 text-gray-700">${field.label}</label>
+                                    <input type="${field.type}" name="${fieldId}" class="w-full border border-gray-300 rounded p-2 focus:ring-2 focus:ring-blue-500">
+                                `;
+                            }
+                            grid.appendChild(wrapper);
+                        });
+                        sectionEl.appendChild(grid);
+                        container.appendChild(sectionEl);
+                    });
+                },
+                submit: async (e) => {
+                    e.preventDefault();
+                    const btn = document.getElementById('dailyCheckSubmitBtn');
+                    const originalContent = btn.innerHTML;
+                    btn.disabled = true;
+                    btn.textContent = 'Submitting...';
+
+                    try {
+                        const form = e.target;
+                        const data = {
+                            timestamp: serverTimestamp(),
+                            submittedAt: new Date().toISOString(),
+                            sections: {}
+                        };
+
+                        const inputs = form.querySelectorAll('input, select, textarea');
+                        
+                        inputs.forEach(input => {
+                            if (!input.name) return;
+                            let value = input.value;
+                            if (input.type === 'checkbox') value = input.checked;
+
+                            const parts = input.name.split('_');
+                            if (parts.length > 1) {
+                                const section = parts[0];
+                                const field = parts.slice(1).join('_');
+                                if (!data.sections[section]) data.sections[section] = {};
+                                data.sections[section][field] = value;
+                            } else {
+                                data[input.name] = value;
+                            }
+                        });
+
+                        // FIX: Use artifacts/appId/public path structure EXPLICITLY
+                        await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'medic_75_daily_checks'), data);
+                        
+                        showToast('Checklist Submitted Successfully!');
+                        e.target.reset();
+                        // Scroll to top
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    } catch (error) {
+                        console.error("Error adding document: ", error);
+                        showToast(error.message, 'error');
+                    } finally {
+                        btn.disabled = false;
+                        btn.innerHTML = originalContent;
                     }
                 }
             }
