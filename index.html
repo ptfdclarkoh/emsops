@@ -389,7 +389,7 @@
             <div class="max-w-7xl mx-auto">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
                     <h2 class="text-3xl font-bold text-gray-800">Drug Bag Exchanges</h2>
-                    <button onclick="DrugBagApp.openReportModal()" class="mt-4 md:mt-0 bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow">
+                    <button onclick="DrugBagApp.openReportModal()" class="mt-4 md:mt-0 bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow flex items-center">
                         <i class="fa-solid fa-print mr-2"></i> Generate Report
                     </button>
                 </div>
@@ -450,15 +450,9 @@
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
-                        <button onclick="OxygenApp.openReportModal()" class="bg-gray-800 hover:bg-gray-900 text-white font-bold py-2 px-4 rounded shadow flex items-center">
+                        <button onclick="OxygenApp.openReportModal()" class="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow flex items-center">
                             <i class="fa-solid fa-print mr-2"></i> Generate Report
                         </button>
-                        <div>
-                            <input type="file" id="ox_csvInput" accept=".csv" class="hidden">
-                            <button onclick="document.getElementById('ox_csvInput').click()" class="bg-gray-800 hover:bg-gray-900 text-white font-bold py-2 px-4 rounded shadow">
-                                <i class="fa-solid fa-file-import mr-2"></i> Import
-                            </button>
-                        </div>
                     </div>
                 </div>
 
@@ -550,7 +544,7 @@
                         <button onclick="DestructionApp.openEntryModal()" class="bg-white text-gray-600 border border-gray-300 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition shadow-sm flex items-center">
                             <i class="fa-solid fa-plus-circle mr-2"></i> New Entry
                         </button>
-                        <button onclick="DestructionApp.openReportModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow flex items-center">
+                        <button onclick="DestructionApp.openReportModal()" class="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow flex items-center">
                             <i class="fa-solid fa-print mr-2"></i> Generate Report
                         </button>
                     </div>
@@ -1299,7 +1293,6 @@
                     document.getElementById('ox_loading').classList.add('hidden');
                 });
                 
-                document.getElementById('ox_csvInput').addEventListener('change', (e) => this.handleImport(e));
                 document.getElementById('ox_search').addEventListener('input', () => this.render());
                 document.getElementById('ox_startDate').addEventListener('change', () => this.render());
                 document.getElementById('ox_endDate').addEventListener('change', () => this.render());
@@ -1479,61 +1472,6 @@
                         </table>
                     </div>
                 `;
-            },
-
-            handleImport: function(e) {
-                const file = e.target.files[0];
-                if(!file) return;
-
-                const status = document.getElementById('ox_importStatus');
-                const bar = document.getElementById('ox_progressBar');
-                status.classList.remove('hidden');
-                
-                const reader = new FileReader();
-                reader.onload = async (evt) => {
-                    const lines = evt.target.result.split(/\r?\n/);
-                    const total = lines.length;
-                    
-                    // Simple logic to detect type based on header
-                    const header = lines[0];
-                    const isMain = header.includes("New Main PSI");
-
-                    for(let i=1; i<lines.length; i++) {
-                        if(!lines[i].trim()) continue;
-                        // CSV parsing logic simplified for brevity (splitting by comma)
-                        // In production, use PapaParse here too like DrugBag module
-                        // This logic mirrors the user's original file index logic
-                        // We'll use a safer approach: just grab what we can
-                        const cols = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(s => s.replace(/^"|"$/g, '').trim());
-                        
-                        
-                        const data = {
-                            createdAt: serverTimestamp(),
-                            dateTime: cols[0], // Date Submitted
-                            member: cols[1], // Member
-                            issues: cols[cols.length-1], // Issues usually last
-                            logType: isMain ? "Main Tank" : "Portable Bottle"
-                        };
-
-                        if(isMain) {
-                            // Map specific indices for Main Tank based on standard forms
-                            // Adjust indices based on actual CSV structure
-                            data.newPsi = cols[4];
-                            data.oldPsi = cols[5];
-                        } else {
-                             data.portableNumber = cols[2];
-                             data.cyl1Psi = cols[5];
-                             data.cyl2Psi = cols[8];
-                        }
-
-                        await addDoc(collection(db, "oxygen_logs"), data);
-                        bar.style.width = Math.round((i/total)*100) + "%";
-                    }
-                    status.classList.add('hidden');
-                    alert("Oxygen logs imported.");
-                    e.target.value = '';
-                };
-                reader.readAsText(file);
             }
         };
 
