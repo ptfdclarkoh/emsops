@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1">
+    <title>PTFD EMS OPS HUB</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="./assets/apple-touch-icon4.png">
+    <link rel="icon" type="image/x-icon" href="./assets/favicon.ico">
+    
+    <!-- 
+      NOTE ON TAILWIND CSS:
+      For a single-file HTML application without a build step (Node.js/PostCSS), 
+      the CDN is the correct and only way to load Tailwind classes dynamically.
+      The console warning about "production" can be safely ignored for this portable tool.
+    -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Icons (FontAwesome & Lucide) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* gray-100 */
+        }
+        
+        /* Utility: Hide/Show */
+        .view-section {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        .view-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Form Specific Styles */
+        .btn-choice.active {
+            background-color: #eff6ff;
+            border-color: #2563eb;
+            color: #1e40af;
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+    </style>
+</head>
+<body class="text-gray-900 min-h-screen flex flex-col">
+
+    <!-- Navbar -->
+    <nav class="bg-slate-900 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-3 cursor-pointer" onclick="app.navTo('hub')">
+                    <!-- Updated Logo Image -->
+                    <img src="https://i.ibb.co/n8R3dn8f/apple-touch-icon4.png" alt="EMS Logo" class="w-10 h-10 rounded-lg shadow-sm">
+                    <span class="font-bold text-lg tracking-wide">PLEASANT TWP EMS OPS HUB</span>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button onclick="app.navTo('hub')" id="nav-home-btn" class="hidden text-sm bg-slate-800 hover:bg-slate-700 px-3 py-2 rounded-md transition border border-slate-700">
+                        <i class="fa-solid fa-grid-2 mr-2"></i> Dashboard
+                    </button>
+                    <div class="flex items-center gap-2 bg-slate-800 px-3 py-1.5 rounded-full border border-slate-700">
+                        <div id="status-indicator" class="w-2 h-2 rounded-full bg-red-500"></div>
+                        <span id="user-status" class="text-xs font-medium text-slate-300">Connecting...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-5xl mx-auto w-full p-4 sm:p-6">
+        
+        <!-- === VIEW: HUB DASHBOARD === -->
+        <section id="view-hub" class="view-section active">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-gray-800">Operations Dashboard</h1>
+                <p class="text-gray-500 mt-2">Select a module to begin</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Card 1: Supply Log -->
+                <div onclick="app.navTo('supply')" class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md hover:border-blue-300 cursor-pointer transition group relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                        <i class="fa-solid fa-box-open text-6xl text-blue-600"></i>
+                    </div>
+                    <div class="flex items-center gap-4 mb-2 relative z-10">
+                        <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center group-hover:bg-blue-600 transition shadow-sm">
+                            <i class="fa-solid fa-box-open text-blue-600 text-xl group-hover:text-white transition"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800">Supply Log</h3>
+                            <p class="text-sm text-gray-500">Log out inventory items</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2: Drug Bag Exchange -->
+                <div onclick="app.navTo('drugbag')" class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md hover:border-red-300 cursor-pointer transition group relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                        <i class="fa-solid fa-briefcase-medical text-6xl text-red-600"></i>
+                    </div>
+                    <div class="flex items-center gap-4 mb-2 relative z-10">
+                        <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center group-hover:bg-red-600 transition shadow-sm">
+                            <i class="fa-solid fa-briefcase-medical text-red-600 text-xl group-hover:text-white transition"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800">Drug Bag Exchange</h3>
+                            <p class="text-sm text-gray-500">Log bag swaps & expirations</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3: Oxygen Log -->
+                <div onclick="app.navTo('oxygen')" class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md hover:border-green-300 cursor-pointer transition group relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                        <i class="fa-solid fa-lungs text-6xl text-green-600"></i>
+                    </div>
+                    <div class="flex items-center gap-4 mb-2 relative z-10">
+                        <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center group-hover:bg-green-600 transition shadow-sm">
+                            <i class="fa-solid fa-lungs text-green-600 text-xl group-hover:text-white transition"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800">Oxygen Log</h3>
+                            <p class="text-sm text-gray-500">Main tanks & portables</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 4: Drug Destruction -->
+                <div onclick="app.navTo('destroy')" class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md hover:border-purple-300 cursor-pointer transition group relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                        <i class="fa-solid fa-trash-can text-6xl text-purple-600"></i>
+                    </div>
+                    <div class="flex items-center gap-4 mb-2 relative z-10">
+                        <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center group-hover:bg-purple-600 transition shadow-sm">
+                            <i class="fa-solid fa-trash-can text-purple-600 text-xl group-hover:text-white transition"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800">Drug Destruction</h3>
+                            <p class="text-sm text-gray-500">Log disposal of meds</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- === VIEW: SUPPLY LOG === -->
+        <section id="view-supply" class="view-section">
+            <div class="bg-white p-6 rounded-xl shadow-lg max-w-2xl mx-auto border-t-4 border-blue-600">
+                <div class="border-b pb-4 mb-6 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800">Log Out Supply</h2>
+                        <p class="text-gray-500 text-sm">Inventory Management</p>
+                    </div>
+                    <button onclick="app.navTo('hub')" class="text-gray-400 hover:text-gray-600 bg-gray-100 p-2 rounded-full transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+                </div>
+                
+                <form id="supplyForm" class="space-y-6">
+                    <!-- Item Search -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Item Name</label>
+                        <input list="supplyList" name="item" id="supplyItemInput" required class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 bg-gray-50 focus:bg-white transition" placeholder="Search item...">
+                        <datalist id="supplyList"></datalist>
+                        <p id="supplyItemDetails" class="text-sm text-blue-600 mt-1 font-bold min-h-[1.25rem]"></p>
+                    </div>
+
+                    <!-- Quantity -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Quantity Taken</label>
+                        <input type="number" name="quantityTaken" id="supplyQtyInput" min="1" required class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 bg-gray-50 focus:bg-white transition">
+                    </div>
+
+                    <!-- Member (Shared) -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Member Name</label>
+                        <select id="supplyMemberSelect" name="person" required class="member-select mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg bg-white focus:ring-blue-500">
+                            <option value="" disabled selected>Loading members...</option>
+                        </select>
+                    </div>
+
+                    <!-- Reason -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Reason</label>
+                        <div id="supplyReasonContainer" class="grid grid-cols-3 gap-2">
+                            <button type="button" class="btn-choice border border-gray-300 py-3 rounded-lg font-medium text-gray-600 hover:bg-gray-50 transition" data-value="Use">Use</button>
+                            <button type="button" class="btn-choice border border-gray-300 py-3 rounded-lg font-medium text-gray-600 hover:bg-gray-50 transition" data-value="Expiration">Expiration</button>
+                            <button type="button" class="btn-choice border border-gray-300 py-3 rounded-lg font-medium text-gray-600 hover:bg-gray-50 transition" data-value="Training">Training</button>
+                        </div>
+                        <input type="hidden" id="supplyReasonInput" name="reason" required>
+                    </div>
+
+                    <button type="submit" id="supplySubmitBtn" class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold shadow-md transition flex justify-center items-center gap-2">
+                        <span>Log Item</span>
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- === VIEW: DRUG BAG EXCHANGE === -->
+        <section id="view-drugbag" class="view-section">
+            <div class="bg-white p-6 rounded-xl shadow-lg max-w-2xl mx-auto border-t-4 border-red-600">
+                <div class="border-b pb-4 mb-6 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800">Drug Bag Exchange</h2>
+                        <p class="text-gray-500 text-sm">Bag Swap & Tracking</p>
+                    </div>
+                    <button onclick="app.navTo('hub')" class="text-gray-400 hover:text-gray-600 bg-gray-100 p-2 rounded-full transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+                </div>
+
+                <form id="drugBagForm" class="space-y-6">
+                    <!-- Apparatus & Bag -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Apparatus</label>
+                            <input type="text" value="Medic 75" readonly class="w-full mt-1 px-4 py-2 border bg-gray-100 rounded-lg text-gray-600 cursor-not-allowed">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Select Bag Slot</label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button type="button" id="btn-bag1" class="p-2 border rounded-lg text-center hover:bg-gray-50 transition" onclick="app.drugBag.selectBag('Bag 1')">
+                                    <div id="label-bag1" class="text-lg font-bold">...</div>
+                                    <div class="text-xs text-gray-500">Slot 1</div>
+                                </button>
+                                <button type="button" id="btn-bag2" class="p-2 border rounded-lg text-center hover:bg-gray-50 transition" onclick="app.drugBag.selectBag('Bag 2')">
+                                    <div id="label-bag2" class="text-lg font-bold">...</div>
+                                    <div class="text-xs text-gray-500">Slot 2</div>
+                                </button>
+                            </div>
+                            <input type="hidden" id="drugBagIdentifier" value="Bag 1">
+                        </div>
+                    </div>
+
+                    <!-- New Bag Number -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">New Bag Number</label>
+                        <input type="number" id="drugNewBagNum" placeholder="e.g. 1234" class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-blue-500 text-lg tracking-widest text-center font-mono">
+                    </div>
+
+                    <!-- Details -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">New Expiration</label>
+                            <input type="date" id="drugExpiration" required class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Facility</label>
+                            <select id="drugFacility" required class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg bg-white">
+                                <option value="" disabled selected>Select...</option>
+                                <option value="Springfield Regional">Springfield Regional</option>
+                                <option value="Kettering Health">Kettering Health</option>
+                                <option value="Soin Medical">Soin Medical</option>
+                                <option value="Miami Valley">Miami Valley</option>
+                                <option value="Dayton Childrens">Dayton Children's</option>
+                                <option value="Mercy - Urbana">Mercy - Urbana</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Reason -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Reason</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button type="button" class="btn-reason border rounded-lg p-3 hover:bg-gray-50 font-medium text-sm transition" onclick="app.drugBag.selectReason('Used')">
+                                Used <span id="display-run" class="block text-xs text-blue-600 font-bold mt-1"></span>
+                            </button>
+                            <button type="button" class="btn-reason border rounded-lg p-3 hover:bg-gray-50 font-medium text-sm transition" onclick="app.drugBag.selectReason('Expired')">
+                                Expired <span id="display-expired" class="block text-xs text-blue-600 font-bold mt-1"></span>
+                            </button>
+                            <button type="button" class="btn-reason border rounded-lg p-3 hover:bg-gray-50 font-medium text-sm transition" onclick="app.drugBag.selectReason('Broken Seal')">Broken Seal</button>
+                            <button type="button" class="btn-reason border rounded-lg p-3 hover:bg-gray-50 font-medium text-sm transition" onclick="app.drugBag.selectReason('Bag Update')">Bag Update</button>
+                        </div>
+                        <input type="hidden" id="drugReasonInput">
+                        <!-- Extra Hidden Fields -->
+                        <input type="hidden" id="drugRunNumber">
+                        <input type="hidden" id="drugOldExpiration">
+                    </div>
+
+                    <!-- Submitted By -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Submitted By</label>
+                        <select id="drugMemberSelect" required class="member-select mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg bg-white">
+                            <option value="" disabled selected>Loading...</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" id="drugSubmitBtn" class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold shadow-md transition flex justify-center items-center gap-2">
+                        <span>Submit Exchange</span>
+                        <i class="fa-solid fa-check"></i>
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- === VIEW: OXYGEN LOG === -->
+        <section id="view-oxygen" class="view-section">
+            <div class="bg-white p-6 rounded-xl shadow-lg max-w-xl mx-auto border-t-4 border-green-600">
+                <div class="mb-6 flex justify-between items-start">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800 uppercase tracking-wide">Oxygen Log</h2>
+                        <p class="text-gray-500 text-sm">Tank Checks & Exchanges</p>
+                    </div>
+                    <button onclick="app.navTo('hub')" class="text-gray-400 hover:text-gray-600 bg-gray-100 p-2 rounded-full transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+                </div>
+
+                <form id="oxygenForm" class="space-y-4">
+                    <!-- Member -->
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase">Reporting Member</label>
+                        <select id="oxygenMemberSelect" required class="member-select mt-1 block w-full px-3 py-2 border border-gray-300 rounded bg-white">
+                            <option value="" disabled selected>Loading...</option>
+                        </select>
+                    </div>
+
+                    <!-- Log Type -->
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase">Log Type</label>
+                        <select id="oxygenLogType" onchange="app.oxygen.toggleFields()" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded bg-gray-50">
+                            <option value="Main Tank">Main Oxygen Tank Exchange</option>
+                            <option value="Portable Bottle">Portable Bottle Check</option>
+                        </select>
+                    </div>
+
+                    <!-- Main Tank Fields -->
+                    <div id="oxMainFields" class="bg-blue-50 p-4 rounded border-l-4 border-blue-500 space-y-3">
+                        <h4 class="text-blue-800 font-bold text-sm flex items-center gap-2">
+                            <i class="fa-solid fa-truck-medical"></i> MAIN TANK DETAILS
+                        </h4>
+                        <div class="grid grid-cols-2 gap-3">
+                            <input type="text" id="oxNewLot" placeholder="New Lot #" class="w-full p-2 border rounded text-sm focus:ring-2 focus:ring-blue-400">
+                            <input type="text" id="oxOldLot" placeholder="Old Lot #" class="w-full p-2 border rounded text-sm focus:ring-2 focus:ring-blue-400">
+                            <input type="number" id="oxNewPsi" placeholder="New PSI" class="w-full p-2 border rounded text-sm focus:ring-2 focus:ring-blue-400">
+                            <input type="number" id="oxOldPsi" placeholder="Old PSI" class="w-full p-2 border rounded text-sm focus:ring-2 focus:ring-blue-400">
+                        </div>
+                    </div>
+
+                    <!-- Portable Fields -->
+                    <div id="oxPortableFields" class="hidden bg-green-50 p-4 rounded border-l-4 border-green-500 space-y-3">
+                        <h4 class="text-green-800 font-bold text-sm flex items-center gap-2">
+                            <i class="fa-solid fa-suitcase-medical"></i> PORTABLE DETAILS
+                        </h4>
+                        <select id="oxPortableId" class="w-full p-2 border rounded bg-white mb-2">
+                            <option value="" disabled selected>Select Location</option>
+                            <option value="Jump Bag">Jump Bag</option>
+                            <option value="Stretcher">Stretcher</option>
+                            <option value="Spare 1">Spare 1</option>
+                            <option value="Spare 2">Spare 2</option>
+                        </select>
+                        
+                        <div class="grid grid-cols-2 gap-2 text-sm">
+                            <div class="col-span-2 font-bold text-gray-600 mt-1">Cylinder 1</div>
+                            <input type="text" id="oxCyl1Lot" placeholder="Lot #" class="p-2 border rounded">
+                            <input type="number" id="oxCyl1Psi" placeholder="PSI" class="p-2 border rounded">
+                            
+                            <div class="col-span-2 font-bold text-gray-600 mt-2">Cylinder 2</div>
+                            <input type="text" id="oxCyl2Lot" placeholder="Lot #" class="p-2 border rounded">
+                            <input type="number" id="oxCyl2Psi" placeholder="PSI" class="p-2 border rounded">
+                        </div>
+                    </div>
+
+                    <!-- Issues -->
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase">Issues / Notes</label>
+                        <textarea id="oxIssues" rows="2" class="mt-1 w-full p-2 border rounded" placeholder="Leaks, damages..."></textarea>
+                    </div>
+
+                    <button type="submit" id="oxSubmitBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded shadow transition flex justify-center items-center gap-2">
+                        <span>Submit Log</span>
+                        <i class="fa-solid fa-check"></i>
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- === VIEW: DRUG DESTRUCTION === -->
+        <section id="view-destroy" class="view-section">
+            <div class="bg-white p-6 rounded-xl shadow-lg max-w-xl mx-auto border-t-4 border-purple-600">
+                <div class="mb-6 flex justify-between items-center">
+                    <div class="flex items-center gap-2">
+                        <div class="bg-purple-100 p-2 rounded-lg">
+                            <i data-lucide="trash-2" class="text-purple-600 w-6 h-6"></i>
+                        </div>
+                        <h2 class="text-xl font-bold text-gray-800">Destruction Record</h2>
+                    </div>
+                    <button onclick="app.navTo('hub')" class="text-gray-400 hover:text-gray-600 bg-gray-100 p-2 rounded-full transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+                </div>
+
+                <form id="destroyForm" class="space-y-5">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Date</label>
+                            <input type="date" id="destDate" required class="w-full mt-1 p-2 border rounded-lg">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Professional</label>
+                            <!-- Using standard input as this might be external witness -->
+                            <input type="text" id="destProf" placeholder="Name" required class="w-full mt-1 p-2 border rounded-lg">
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <h3 class="text-xs font-bold text-gray-500 uppercase mb-3">Drug Details</h3>
+                        <div class="space-y-3">
+                            <input type="text" id="destDrugName" placeholder="Drug Name" required class="w-full p-2 border rounded">
+                            <div class="grid grid-cols-2 gap-3">
+                                <input type="text" id="destStrength" placeholder="Strength (e.g. 4mg)" class="w-full p-2 border rounded">
+                                <input type="text" id="destQty" placeholder="Qty (e.g. 2 vials)" required class="w-full p-2 border rounded">
+                            </div>
+                            <select id="destForm" class="w-full p-2 border rounded bg-white">
+                                <option value="Injection (Vial)">Injection (Vial)</option>
+                                <option value="Injection (Ampule)">Injection (Ampule)</option>
+                                <option value="Tablet">Tablet</option>
+                                <option value="Liquid">Liquid</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Disposal Method</label>
+                        <select id="destMethod" class="w-full mt-1 p-2 border rounded-lg bg-white">
+                            <option value="Chemical Digestion">Chemical Digestion</option>
+                            <option value="Incineration">Incineration</option>
+                            <option value="Reverse Distributor">Reverse Distributor</option>
+                            <option value="Sewer">Sewer (If Permitted)</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" id="destSubmitBtn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 rounded shadow transition flex justify-center items-center gap-2">
+                        <i data-lucide="save" class="w-4 h-4"></i> Sign & Save Record
+                    </button>
+                </form>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Global Toast Notification -->
+    <div id="toast" class="fixed top-4 right-4 z-[100] hidden px-6 py-4 rounded-lg shadow-xl transform transition-all duration-300 translate-y-[-20px] opacity-0 border">
+        <div class="flex items-center gap-3">
+            <div id="toast-icon" class="text-lg"></div>
+            <div id="toast-msg" class="font-medium text-sm"></div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <!-- 1. Run Number Modal (Drug Bag) -->
+    <div id="modal-run" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-white rounded-xl p-6 w-full max-w-sm mx-4 shadow-2xl animate-[fadeIn_0.2s_ease-out]">
+            <h3 class="text-xl font-bold mb-4 text-center">Enter Run Number</h3>
+            <div class="flex justify-center items-center gap-2 mb-6">
+                <input type="number" id="run-part-1" class="w-20 h-16 text-center text-2xl border-2 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition" placeholder="##">
+                <span class="text-2xl font-bold text-gray-400">-</span>
+                <input type="number" id="run-part-2" class="w-28 h-16 text-center text-2xl border-2 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition" placeholder="###">
+            </div>
+            <div class="flex gap-3">
+                <button onclick="document.getElementById('modal-run').classList.add('hidden')" class="flex-1 py-3 border rounded-lg hover:bg-gray-50 font-medium">Cancel</button>
+                <button onclick="app.drugBag.confirmRun()" class="flex-1 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold shadow-md">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Old Expiration Modal (Drug Bag) -->
+    <div id="modal-expire" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-white rounded-xl p-6 w-full max-w-sm mx-4 shadow-2xl animate-[fadeIn_0.2s_ease-out]">
+            <h3 class="text-xl font-bold mb-2 text-center text-red-600">Old Bag Expiration</h3>
+            <p class="text-center text-sm text-gray-500 mb-4">Enter expiration date of the REMOVED bag.</p>
+            <input type="date" id="modal-expire-input" class="w-full p-4 border-2 rounded-lg mb-6 text-lg">
+            <div class="flex gap-3">
+                <button onclick="document.getElementById('modal-expire').classList.add('hidden')" class="flex-1 py-3 border rounded-lg hover:bg-gray-50 font-medium">Cancel</button>
+                <button onclick="app.drugBag.confirmExpire()" class="flex-1 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-bold shadow-md">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, collection, addDoc, updateDoc, setDoc, getDoc, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- Configuration ---
+        // RESTORED: User's specific Firebase credentials.
+        const userConfig = {
+            apiKey: "AIzaSyBTjbo2ndQYowrvmcDxeXfvNb_E3nSijH8",
+            authDomain: "ems-inventory.firebaseapp.com",
+            projectId: "ems-inventory",
+            storageBucket: "ems-inventory.firebasestorage.app",
+            messagingSenderId: "1076236960850",
+            appId: "1:1076236960850:web:07cc24cd638ef4a8298b8b",
+            measurementId: "G-BFFXWP4G42"
+        };
+
+        // Determine config to use: Preview Env or Hardcoded User Config
+        const firebaseConfig = typeof __firebase_config !== 'undefined' 
+            ? JSON.parse(__firebase_config) 
+            : userConfig;
+        
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+        // Initialize Firebase
+        const firebaseApp = initializeApp(firebaseConfig);
+        const auth = getAuth(firebaseApp);
+        const db = getFirestore(firebaseApp);
+
+        // --- Utilities ---
+        
+        // Helper to get safe collection path compatible with the immersive environment
+        const getColPath = (colName) => {
+            // If running in the specific preview env, use scoped paths. 
+            // If running locally (using userConfig), use root collections.
+            if(typeof __app_id !== 'undefined') {
+                return `artifacts/${appId}/public/data/${colName}`;
+            }
+            return colName;
+        };
+
+        const showToast = (msg, type = 'success') => {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toast-icon');
+            const txt = document.getElementById('toast-msg');
+
+            toast.classList.remove('hidden', 'bg-green-50', 'text-green-800', 'bg-red-50', 'text-red-800', 'border-green-200', 'border-red-200');
+            toast.style.opacity = '1';
+            toast.style.transform = 'translateY(0)';
+
+            if (type === 'success') {
+                toast.classList.add('bg-green-50', 'text-green-800', 'border-green-200');
+                icon.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+            } else {
+                toast.classList.add('bg-red-50', 'text-red-800', 'border-red-200');
+                icon.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i>';
+            }
+
+            txt.textContent = msg;
+            toast.classList.remove('hidden');
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-20px)';
+                setTimeout(() => toast.classList.add('hidden'), 300);
+            }, 3000);
+        };
+
+        // Fetch Member List (Cached)
+        let memberCache = null;
+        const loadMembers = async () => {
+            if (memberCache) return memberCache;
+            
+            try {
+                const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRc1IdR2_NZQjZZUxmHnCcaNpJCpiokXvQ1zHgRmWXkdXBydgZB15-eABGwb7eW4IIRz_m5nWWyXOxI/pub?gid=0&single=true&output=csv";
+                const resp = await fetch(sheetUrl);
+                const txt = await resp.text();
+                const lines = txt.split('\n');
+                const members = [];
+
+                for(let i=1; i<lines.length; i++) {
+                    let name = lines[i].trim();
+                    if(name.startsWith('"') && name.endsWith('"')) name = name.substring(1, name.length-1);
+                    if(name) members.push(name);
+                }
+                memberCache = members;
+                return members;
+            } catch(e) {
+                console.error("Member fetch error:", e);
+                return [];
+            }
+        };
+
+        const populateMemberSelects = async () => {
+            const members = await loadMembers();
+            const selects = document.querySelectorAll('.member-select');
+            selects.forEach(sel => {
+                sel.innerHTML = '<option value="" disabled selected>Select Member...</option>';
+                members.forEach(m => {
+                    const opt = document.createElement('option');
+                    opt.value = m;
+                    opt.textContent = m;
+                    sel.appendChild(opt);
+                });
+            });
+        };
+
+        // --- APP MODULES ---
+
+        const App = {
+            user: null,
+
+            init: async () => {
+                lucide.createIcons();
+                
+                // Auth Observer
+                onAuthStateChanged(auth, (user) => {
+                    App.user = user;
+                    const status = document.getElementById('user-status');
+                    const indicator = document.getElementById('status-indicator');
+                    if(user) {
+                        status.textContent = 'Connected';
+                        status.className = 'text-xs font-medium text-green-400';
+                        indicator.className = 'w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]';
+                        populateMemberSelects(); 
+                        App.supply.loadInventory(); 
+                        App.drugBag.loadBagStatus();
+                    } else {
+                        status.textContent = 'Offline';
+                        status.className = 'text-xs font-medium text-red-400';
+                        indicator.className = 'w-2 h-2 rounded-full bg-red-500';
+                    }
+                });
+
+                // Sign In Logic
+                try {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                } catch (e) { console.error("Auth Fail", e); }
+
+                // Setup Navigation
+                App.navTo('hub');
+                
+                // Init Sub-Modules
+                App.supply.init();
+                App.drugBag.init();
+                App.oxygen.init();
+                App.destroy.init();
+            },
+
+            navTo: (viewName) => {
+                document.querySelectorAll('.view-section').forEach(el => {
+                    el.classList.remove('active');
+                    if(el.id === `view-${viewName}`) el.classList.add('active');
+                });
+                
+                // Toggle Home Button
+                const homeBtn = document.getElementById('nav-home-btn');
+                if(viewName === 'hub') homeBtn.classList.add('hidden');
+                else homeBtn.classList.remove('hidden');
+
+                // Refresh Icons if needed
+                lucide.createIcons();
+            },
+
+            // --- MODULE 1: SUPPLY LOG ---
+            supply: {
+                inventory: [],
+                init: () => {
+                    // Item Selection Logic
+                    const input = document.getElementById('supplyItemInput');
+                    input.addEventListener('input', (e) => {
+                        const val = e.target.value;
+                        const item = App.supply.inventory.find(i => i.name === val);
+                        const det = document.getElementById('supplyItemDetails');
+                        const qtyInput = document.getElementById('supplyQtyInput');
+                        
+                        if(item) {
+                            det.textContent = `In Stock: ${item.quantity}`;
+                            qtyInput.max = item.quantity;
+                        } else {
+                            det.textContent = '';
+                            qtyInput.removeAttribute('max');
+                        }
+                    });
+
+                    // Reason Buttons
+                    const container = document.getElementById('supplyReasonContainer');
+                    const hidden = document.getElementById('supplyReasonInput');
+                    container.addEventListener('click', (e) => {
+                        if(e.target.classList.contains('btn-choice')) {
+                            container.querySelectorAll('.btn-choice').forEach(b => b.classList.remove('active'));
+                            e.target.classList.add('active');
+                            hidden.value = e.target.dataset.value;
+                        }
+                    });
+
+                    // Submit
+                    document.getElementById('supplyForm').addEventListener('submit', App.supply.submit);
+                },
+                loadInventory: async () => {
+                    if(!App.user) return;
+                    const list = document.getElementById('supplyList');
+                    list.innerHTML = '';
+                    App.supply.inventory = [];
+                    
+                    try {
+                        const snap = await getDocs(collection(db, getColPath('supplies')));
+                        snap.forEach(d => {
+                            const data = d.data();
+                            if(data.quantity > 0) {
+                                App.supply.inventory.push({id: d.id, name: data.item, quantity: data.quantity});
+                                const opt = document.createElement('option');
+                                opt.value = data.item;
+                                list.appendChild(opt);
+                            }
+                        });
+                    } catch(e) { console.error("Inv Load Error", e); }
+                },
+                submit: async (e) => {
+                    e.preventDefault();
+                    if(!App.user) return showToast("Not authenticated", "error");
+
+                    const btn = document.getElementById('supplySubmitBtn');
+                    const originalContent = btn.innerHTML;
+                    btn.disabled = true;
+                    btn.textContent = "Processing...";
+
+                    try {
+                        const fd = new FormData(e.target);
+                        const itemVal = fd.get('item');
+                        const qty = parseInt(fd.get('quantityTaken'));
+                        
+                        const stockItem = App.supply.inventory.find(i => i.name === itemVal);
+                        
+                        if(!stockItem) throw new Error("Invalid Item - select from list");
+                        if(qty > stockItem.quantity) throw new Error("Insuffient Stock");
+
+                        // Update Stock
+                        await updateDoc(doc(db, getColPath('supplies'), stockItem.id), {
+                            quantity: stockItem.quantity - qty,
+                            lastUpdated: serverTimestamp()
+                        });
+
+                        // Log Transaction
+                        await addDoc(collection(db, getColPath('transactions')), {
+                            item: itemVal,
+                            quantityTaken: qty,
+                            person: fd.get('person'),
+                            reason: fd.get('reason'),
+                            loggedAt: serverTimestamp()
+                        });
+
+                        showToast("Supply logged out!");
+                        e.target.reset();
+                        document.getElementById('supplyItemDetails').textContent = '';
+                        document.querySelectorAll('#supplyReasonContainer .btn-choice').forEach(b => b.classList.remove('active'));
+                        App.supply.loadInventory(); // Refresh local cache
+
+                    } catch(err) {
+                        showToast(err.message, 'error');
+                    } finally {
+                        btn.disabled = false;
+                        btn.innerHTML = originalContent;
+                    }
+                }
+            },
+
+            // --- MODULE 2: DRUG BAG ---
+            drugBag: {
+                currentBagData: {},
+                init: () => {
+                    document.getElementById('drugBagForm').addEventListener('submit', App.drugBag.submit);
+                    
+                    // Input auto-tabbing for Run Number
+                    const p1 = document.getElementById('run-part-1');
+                    const p2 = document.getElementById('run-part-2');
+                    p1.addEventListener('input', () => { if(p1.value.length >= 2) p2.focus(); });
+                    p2.addEventListener('keydown', (e) => { if(e.key === 'Backspace' && p2.value === '') p1.focus(); });
+                },
+                loadBagStatus: async () => {
+                    // Assuming structure: collections 'bags', doc 'Medic 75 - Bag 1'
+                    const apparatus = "Medic 75";
+                    ['Bag 1', 'Bag 2'].forEach(async (bag) => {
+                        const label = document.getElementById(bag === 'Bag 1' ? 'label-bag1' : 'label-bag2');
+                        try {
+                            const d = await getDoc(doc(db, getColPath('bags'), `${apparatus} - ${bag}`));
+                            if(d.exists()) {
+                                const val = d.data().bagNumber || 'Empty';
+                                label.textContent = val;
+                                App.drugBag.currentBagData[bag] = val;
+                            } else {
+                                label.textContent = 'Empty';
+                            }
+                        } catch(e) {
+                             label.textContent = '--';
+                        }
+                    });
+                },
+                selectBag: (bagId) => {
+                    document.getElementById('drugBagIdentifier').value = bagId;
+                    const btn1 = document.getElementById('btn-bag1');
+                    const btn2 = document.getElementById('btn-bag2');
+                    
+                    if(bagId === 'Bag 1') {
+                        btn1.classList.add('bg-blue-50', 'border-blue-500', 'text-blue-700');
+                        btn2.classList.remove('bg-blue-50', 'border-blue-500', 'text-blue-700');
+                    } else {
+                        btn2.classList.add('bg-blue-50', 'border-blue-500', 'text-blue-700');
+                        btn1.classList.remove('bg-blue-50', 'border-blue-500', 'text-blue-700');
+                    }
+                },
+                selectReason: (reason) => {
+                    document.getElementById('drugReasonInput').value = reason;
+                    
+                    // Visuals
+                    document.querySelectorAll('.btn-reason').forEach(b => {
+                        b.classList.remove('bg-blue-100', 'border-blue-500', 'text-blue-800');
+                        if(b.textContent.includes(reason)) b.classList.add('bg-blue-100', 'border-blue-500', 'text-blue-800');
+                    });
+
+                    if(reason === 'Used') {
+                        document.getElementById('modal-run').classList.remove('hidden');
+                        document.getElementById('run-part-1').focus();
+                    } else if (reason === 'Expired') {
+                        document.getElementById('modal-expire').classList.remove('hidden');
+                    }
+                },
+                confirmRun: () => {
+                    const p1 = document.getElementById('run-part-1').value;
+                    const p2 = document.getElementById('run-part-2').value;
+                    if(!p1 || !p2) return showToast("Incomplete Run #", "error");
+                    
+                    const runNum = `${p1}-${p2}`;
+                    document.getElementById('drugRunNumber').value = runNum;
+                    document.getElementById('display-run').textContent = `Run: ${runNum}`;
+                    document.getElementById('modal-run').classList.add('hidden');
+                },
+                confirmExpire: () => {
+                    const date = document.getElementById('modal-expire-input').value;
+                    if(!date) return showToast("Select Date", "error");
+                    
+                    document.getElementById('drugOldExpiration').value = date;
+                    document.getElementById('display-expired').textContent = `Exp: ${date}`;
+                    document.getElementById('modal-expire').classList.add('hidden');
+                },
+                submit: async (e) => {
+                    e.preventDefault();
+                    if(!App.user) return showToast("Not auth", "error");
+
+                    const btn = document.getElementById('drugSubmitBtn');
+                    const originalContent = btn.innerHTML;
+                    btn.disabled = true;
+                    btn.textContent = "Submitting...";
+
+                    try {
+                        // Gather Data
+                        const bagId = document.getElementById('drugBagIdentifier').value;
+                        const reason = document.getElementById('drugReasonInput').value;
+                        const newBagNum = document.getElementById('drugNewBagNum').value;
+                        const expiry = document.getElementById('drugExpiration').value;
+                        const facility = document.getElementById('drugFacility').value;
+                        const member = document.getElementById('drugMemberSelect').value;
+                        
+                        const oldBagNum = App.drugBag.currentBagData[bagId] || "Unknown";
+                        const apparatus = `Medic 75 - ${bagId}`;
+
+                        let finalReason = reason;
+                        if(reason === 'Used') finalReason += ` (Run: ${document.getElementById('drugRunNumber').value})`;
+                        if(reason === 'Expired') finalReason += ` (Exp: ${document.getElementById('drugOldExpiration').value})`;
+
+                        const record = {
+                            apparatus,
+                            oldBagNumber: oldBagNum,
+                            newBagNumber: newBagNum,
+                            expirationDate: expiry,
+                            facility,
+                            reason: finalReason,
+                            submittedBy: member,
+                            timestamp: serverTimestamp()
+                        };
+
+                        // 1. Add History Log
+                        await addDoc(collection(db, getColPath('exchanges')), record);
+
+                        // 2. Update Current State
+                        await setDoc(doc(db, getColPath('bags'), apparatus), {
+                            apparatus,
+                            bagNumber: newBagNum,
+                            expirationDate: expiry,
+                            lastUpdated: serverTimestamp()
+                        });
+
+                        showToast("Exchange Recorded");
+                        e.target.reset();
+                        // Reset UI Logic
+                        App.drugBag.selectBag('Bag 1'); 
+                        document.querySelectorAll('.btn-reason').forEach(b => b.classList.remove('active', 'bg-blue-100'));
+                        document.getElementById('display-run').textContent = '';
+                        document.getElementById('display-expired').textContent = '';
+                        App.drugBag.loadBagStatus(); // Refresh Labels
+
+                    } catch(err) {
+                        showToast(err.message, "error");
+                    } finally {
+                        btn.disabled = false;
+                        btn.innerHTML = originalContent;
+                    }
+                }
+            },
+
+            // --- MODULE 3: OXYGEN ---
+            oxygen: {
+                init: () => {
+                    document.getElementById('oxygenForm').addEventListener('submit', App.oxygen.submit);
+                },
+                toggleFields: () => {
+                    const type = document.getElementById('oxygenLogType').value;
+                    const main = document.getElementById('oxMainFields');
+                    const port = document.getElementById('oxPortableFields');
+                    
+                    if(type === 'Main Tank') {
+                        main.classList.remove('hidden');
+                        port.classList.add('hidden');
+                    } else {
+                        main.classList.add('hidden');
+                        port.classList.remove('hidden');
+                    }
+                },
+                submit: async (e) => {
+                    e.preventDefault();
+                    if(!App.user) return showToast("Not Auth", "error");
+
+                    const btn = document.getElementById('oxSubmitBtn');
+                    const originalContent = btn.innerHTML;
+                    btn.disabled = true;
+                    btn.textContent = "Saving...";
+
+                    try {
+                        const type = document.getElementById('oxygenLogType').value;
+                        const data = {
+                            logType: type,
+                            member: document.getElementById('oxygenMemberSelect').value,
+                            issues: document.getElementById('oxIssues').value,
+                            createdAt: serverTimestamp(),
+                            dateTime: new Date().toLocaleString()
+                        };
+
+                        if(type === 'Main Tank') {
+                            data.newLot = document.getElementById('oxNewLot').value;
+                            data.oldLot = document.getElementById('oxOldLot').value;
+                            data.newPsi = document.getElementById('oxNewPsi').value;
+                            data.oldPsi = document.getElementById('oxOldPsi').value;
+                        } else {
+                            data.portableId = document.getElementById('oxPortableId').value;
+                            data.cyl1 = { lot: document.getElementById('oxCyl1Lot').value, psi: document.getElementById('oxCyl1Psi').value };
+                            data.cyl2 = { lot: document.getElementById('oxCyl2Lot').value, psi: document.getElementById('oxCyl2Psi').value };
+                        }
+
+                        await addDoc(collection(db, getColPath('oxygen_logs')), data);
+                        showToast("Oxygen Logged");
+                        e.target.reset();
+                        App.oxygen.toggleFields(); // Reset visibility defaults
+                    } catch(err) {
+                        showToast(err.message, "error");
+                    } finally {
+                        btn.disabled = false;
+                        btn.innerHTML = originalContent;
+                    }
+                }
+            },
+
+            // --- MODULE 4: DESTRUCTION ---
+            destroy: {
+                init: () => {
+                    document.getElementById('destDate').valueAsDate = new Date();
+                    document.getElementById('destroyForm').addEventListener('submit', App.destroy.submit);
+                },
+                submit: async (e) => {
+                    e.preventDefault();
+                    if(!App.user) return showToast("Not Auth", "error");
+                    
+                    const btn = document.getElementById('destSubmitBtn');
+                    const originalContent = btn.innerHTML;
+                    btn.disabled = true;
+                    btn.textContent = "Saving...";
+
+                    try {
+                        const data = {
+                            date: document.getElementById('destDate').value,
+                            professional: document.getElementById('destProf').value,
+                            drug: {
+                                name: document.getElementById('destDrugName').value,
+                                strength: document.getElementById('destStrength').value,
+                                quantity: document.getElementById('destQty').value,
+                                form: document.getElementById('destForm').value
+                            },
+                            method: document.getElementById('destMethod').value,
+                            createdAt: serverTimestamp()
+                        };
+
+                        await addDoc(collection(db, getColPath('drug_destruction_logs')), data);
+                        showToast("Destruction Recorded");
+                        
+                        // Clear sensitive fields only
+                        document.getElementById('destDrugName').value = '';
+                        document.getElementById('destStrength').value = '';
+                        document.getElementById('destQty').value = '';
+                        
+                    } catch(err) {
+                        showToast(err.message, "error");
+                    } finally {
+                        btn.disabled = false;
+                        btn.innerHTML = originalContent;
+                        lucide.createIcons();
+                    }
+                }
+            }
+        };
+
+        // Start App
+        window.app = App; // Expose for HTML onclicks
+        App.init();
+
+    </script>
+</body>
+</html>
