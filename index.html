@@ -234,58 +234,13 @@
         </div>
 
         <!-- === VIEW: RECORDS (MEDIC 75 LOGS) === -->
-        <div id="view-records" class="view-section p-4 lg:p-8">
-            <div class="max-w-7xl mx-auto">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-3xl font-bold text-gray-800">Medic 75 Logs</h2>
-                </div>
-
-                <div class="bg-white rounded shadow overflow-hidden">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Submitted By</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shift Date</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mileage</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Comments</th>
-                            </tr>
-                        </thead>
-                        <tbody id="logsList" class="bg-white divide-y divide-gray-200">
-                            <tr>
-                                <td colspan="5" class="text-center p-4 text-gray-500">Loading records...</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+        <div id="view-records" class="view-section h-full w-full p-0 overflow-hidden">
+            <iframe src="mediccheckrecords.html" class="w-full h-full border-0"></iframe>
         </div>
 
         <!-- === VIEW: FORM MANAGER === -->
-        <div id="view-manager" class="view-section p-4 lg:p-8">
-            <div class="max-w-4xl mx-auto">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-                    <div>
-                        <h2 class="text-3xl font-bold text-gray-800">Form Manager</h2>
-                        <p class="text-gray-500 text-sm">Edit Medic 75 Daily Check Template</p>
-                    </div>
-                    <div class="flex gap-2 mt-4 md:mt-0">
-                        <button onclick="ManagerApp.resetToDefault()" class="text-sm text-slate-500 hover:text-red-600 mr-4 transition">Reset Default</button>
-                        <button id="saveConfigBtn" onclick="ManagerApp.saveConfig()" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded font-bold shadow transition flex items-center">
-                            <i class="fa-solid fa-floppy-disk mr-2"></i> Save Changes
-                        </button>
-                    </div>
-                </div>
-
-                <div id="editor-container">
-                    <!-- Sections load here -->
-                    <div class="text-center p-8 text-gray-500">Loading Configuration...</div>
-                </div>
-                
-                <button onclick="ManagerApp.addSection()" class="w-full py-6 mt-4 border-2 border-dashed border-gray-400 text-gray-500 rounded-lg hover:bg-white hover:border-blue-500 hover:text-blue-600 transition text-lg font-bold">
-                    + Add New Category
-                </button>
-            </div>
+        <div id="view-manager" class="view-section h-full w-full p-0 overflow-hidden">
+             <iframe src="mediccheckmanager.html" class="w-full h-full border-0"></iframe>
         </div>
 
         <!-- === VIEW: INVENTORY === -->
@@ -780,22 +735,6 @@
         </div>
     </div>
 
-    <!-- Log Details Modal -->
-    <div id="detailModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] flex flex-col">
-            <div class="p-4 border-b flex justify-between items-center bg-gray-50 rounded-t-lg">
-                <h2 class="text-lg font-bold text-gray-800">Checklist Details</h2>
-                <button onclick="RecordsApp.closeModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
-            </div>
-            <div id="modalContent" class="p-6 overflow-y-auto">
-                <!-- Content injected here -->
-            </div>
-            <div class="p-4 border-t bg-gray-50 rounded-b-lg text-right">
-                <button onclick="RecordsApp.closeModal()" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded">Close</button>
-            </div>
-        </div>
-    </div>
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -853,8 +792,6 @@
                 if(viewId === 'drugbag') DrugBagApp.init();
                 if(viewId === 'oxygen') OxygenApp.init();
                 if(viewId === 'destruction') DestructionApp.init();
-                if(viewId === 'manager') ManagerApp.init();
-                if(viewId === 'records') RecordsApp.init();
             }
         };
 
@@ -904,322 +841,6 @@
         };
 
         // --- APP MODULES ---
-
-        /* ================= RECORDS APP (MEDIC 75 LOGS) ================= */
-        const RecordsApp = {
-            listener: null,
-            allLogs: [],
-
-            init: function() {
-                if(this.listener) return;
-                if(!currentUser) return;
-
-                const q = query(
-                    collection(db, 'artifacts', currentAppId, 'public', 'data', 'medic_75_daily_checks'),
-                    orderBy('submittedAt', 'desc'),
-                    limit(50)
-                );
-
-                this.listener = onSnapshot(q, (snapshot) => {
-                    const logsList = document.getElementById('logsList');
-                    logsList.innerHTML = '';
-                    this.allLogs = [];
-
-                    snapshot.forEach(doc => {
-                        const data = doc.data();
-                        data.id = doc.id;
-                        this.allLogs.push(data);
-                        
-                        // Safe accessors
-                        const submittedBy = data.sections?.General?.SubmittedBy || data.General_SubmittedBy || 'Unknown';
-                        const rawDate = data.sections?.General?.Date || data.General_Date;
-                        const displayDate = this.formatDate(rawDate);
-                        
-                        const mileage = data.sections?.Cab?.Mileage || data.Cab_Mileage || 'N/A';
-                        const comments = data.sections?.General?.Comments || data.General_Comments || '';
-                        const submittedAt = this.formatDateTime(data.submittedAt);
-
-                        const row = document.createElement('tr');
-                        row.className = "hover:bg-gray-50 cursor-pointer border-b";
-                        row.onclick = () => this.showDetails(data.id);
-                        row.innerHTML = `
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${submittedAt}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${submittedBy}</td>
-                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${displayDate}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${mileage}</td>
-                            <td class="px-6 py-4 text-sm text-gray-500 truncate max-w-xs">${comments}</td>
-                        `;
-                        logsList.appendChild(row);
-                    });
-                }, (error) => {
-                    console.error("Error fetching logs:", error);
-                    document.getElementById('logsList').innerHTML = '<tr><td colspan="5" class="text-center p-4 text-red-500">Error loading logs. Permission denied or collection empty.</td></tr>';
-                });
-            },
-
-            formatDate: function(val) {
-                if (!val) return 'N/A';
-                const date = new Date(val);
-                if (isNaN(date.getTime())) return val;
-                const mm = String(date.getMonth() + 1).padStart(2, '0');
-                const dd = String(date.getDate()).padStart(2, '0');
-                const yyyy = date.getFullYear();
-                return `${mm}/${dd}/${yyyy}`;
-            },
-
-            formatDateTime: function(val) {
-                 if (!val) return 'N/A';
-                 const date = new Date(val);
-                 if (isNaN(date.getTime())) return val;
-                 return date.toLocaleString('en-US');
-            },
-
-            showDetails: function(id) {
-                const log = this.allLogs.find(l => l.id === id);
-                if (!log) return;
-
-                const content = document.getElementById('modalContent');
-                let html = '';
-                const sections = log.sections || {};
-                
-                // Helper to print object
-                const printObj = (obj, title) => {
-                    if(!obj || Object.keys(obj).length === 0) return '';
-                    let h = `<div class="mb-4"><h3 class="font-bold text-blue-800 border-b mb-2">${title}</h3><div class="grid grid-cols-2 gap-2 text-sm">`;
-                    for(const [k, v] of Object.entries(obj)) {
-                        let niceKey = k.replace(/([A-Z])/g, ' $1').trim();
-                        let niceVal = v;
-                        
-                        if (v === true) {
-                            niceVal = '<span class="text-green-600 font-bold">✓ Yes</span>';
-                        } else if (v === false) {
-                             niceVal = '<span class="text-red-500 font-bold">✗ No</span>';
-                        } else if (typeof v === 'string' && v.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                            niceVal = this.formatDate(v);
-                        }
-                        
-                        h += `<div><span class="font-semibold text-gray-600">${niceKey}:</span> ${niceVal}</div>`;
-                    }
-                    h += `</div></div>`;
-                    return h;
-                };
-
-                if(Object.keys(sections).length === 0 && Object.keys(log).length > 3) {
-                     html += printObj(log, "Full Log Data");
-                } else {
-                    // Try to sort by known section keys or iterate
-                    for(const [secKey, secData] of Object.entries(sections)) {
-                        html += printObj(secData, secKey);
-                    }
-                }
-
-                content.innerHTML = html;
-                document.getElementById('detailModal').classList.remove('hidden');
-            },
-
-            closeModal: function() {
-                document.getElementById('detailModal').classList.add('hidden');
-            }
-        };
-
-        /* ================= MANAGER APP (FORM BUILDER) ================= */
-        const ManagerApp = {
-            currentConfig: { sections: [] },
-            DEFAULT_CONFIG: {
-                sections: [
-                    {
-                        id: "General", title: "Crew Information",
-                        fields: [
-                            { label: "Submitted By", name: "SubmittedBy", type: "text", width: "half" },
-                            { label: "Date", name: "Date", type: "date", width: "half" }
-                        ]
-                    },
-                    {
-                        id: "Cab", title: "Cab Checks",
-                        fields: [
-                            { label: "Mileage", name: "Mileage", type: "number", width: "third" },
-                            { label: "Fuel Level", name: "Fuel", type: "select", options: "Full,3/4,1/2,1/4,Empty", width: "third" }
-                        ]
-                    }
-                ]
-            },
-            initialized: false,
-
-            init: async function() {
-                if(this.initialized) return;
-                if(!currentUser) return;
-                
-                await this.loadConfig();
-                this.initialized = true;
-            },
-
-            loadConfig: async function() {
-                const docRef = doc(db, 'artifacts', currentAppId, 'public', 'data', 'medic_75_config', 'form_structure');
-                try {
-                    const snap = await getDoc(docRef);
-                    if (snap.exists()) {
-                        this.currentConfig = snap.data();
-                    } else {
-                        this.currentConfig = JSON.parse(JSON.stringify(this.DEFAULT_CONFIG));
-                    }
-                    this.renderEditor();
-                } catch(e) {
-                    console.error("Config Load Error", e);
-                    document.getElementById('editor-container').innerHTML = `<div class="text-red-500 text-center">Error loading config: ${e.message}</div>`;
-                }
-            },
-
-            saveConfig: async function() {
-                const btn = document.getElementById('saveConfigBtn');
-                const origText = btn.innerHTML;
-                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Saving...';
-                btn.disabled = true;
-                
-                try {
-                    const docRef = doc(db, 'artifacts', currentAppId, 'public', 'data', 'medic_75_config', 'form_structure');
-                    await setDoc(docRef, this.currentConfig);
-                    showNotification('Configuration Saved!');
-                } catch (e) {
-                    showNotification('Error saving: ' + e.message, 'error');
-                } finally {
-                    btn.innerHTML = origText;
-                    btn.disabled = false;
-                }
-            },
-
-            resetToDefault: function() {
-                if(confirm("Are you sure? This will wipe your custom changes and restore the default Medic 75 template.")) {
-                    this.currentConfig = JSON.parse(JSON.stringify(this.DEFAULT_CONFIG));
-                    this.renderEditor();
-                }
-            },
-
-            renderEditor: function() {
-                const container = document.getElementById('editor-container');
-                container.innerHTML = '';
-
-                this.currentConfig.sections.forEach((section, sIndex) => {
-                    const sectionEl = document.createElement('div');
-                    sectionEl.className = "bg-white p-4 rounded-lg shadow mb-6 border-l-4 border-blue-600";
-                    
-                    sectionEl.innerHTML = `
-                        <div class="flex justify-between items-center mb-4 pb-2 border-b">
-                            <div class="flex gap-2 w-full max-w-md">
-                                <input type="text" value="${section.title}" 
-                                    onchange="ManagerApp.updateSection(${sIndex}, 'title', this.value)"
-                                    class="text-xl font-bold text-gray-800 border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-none w-full"
-                                    placeholder="Section Title">
-                                <input type="text" value="${section.id}" 
-                                    onchange="ManagerApp.updateSection(${sIndex}, 'id', this.value)"
-                                    class="text-xs text-gray-400 font-mono w-24 border rounded px-1"
-                                    title="Section ID (Database Key)" placeholder="ID">
-                            </div>
-                            <div class="flex gap-2">
-                                 <button onclick="ManagerApp.moveSection(${sIndex}, -1)" class="text-gray-400 hover:text-blue-600">▲</button>
-                                 <button onclick="ManagerApp.moveSection(${sIndex}, 1)" class="text-gray-400 hover:text-blue-600">▼</button>
-                                 <button onclick="ManagerApp.deleteSection(${sIndex})" class="text-red-400 hover:text-red-600 ml-2">🗑</button>
-                            </div>
-                        </div>
-                        <div class="space-y-3" id="fields-${sIndex}"></div>
-                        <button onclick="ManagerApp.addField(${sIndex})" class="mt-4 w-full py-2 border-2 border-dashed border-gray-300 text-gray-500 rounded hover:border-blue-400 hover:text-blue-600 transition">+ Add Question</button>
-                    `;
-
-                    const fieldsContainer = sectionEl.querySelector(`#fields-${sIndex}`);
-                    
-                    section.fields.forEach((field, fIndex) => {
-                        const fieldRow = document.createElement('div');
-                        fieldRow.className = "flex gap-2 items-start bg-gray-50 p-2 rounded group";
-                        fieldRow.innerHTML = `
-                            <div class="flex flex-col flex-1 gap-2">
-                                <div class="flex gap-2">
-                                    <input type="text" placeholder="Label" value="${field.label}" 
-                                        onchange="ManagerApp.updateField(${sIndex}, ${fIndex}, 'label', this.value)"
-                                        class="border rounded p-1 text-sm flex-1">
-                                    <input type="text" placeholder="DB Name (ID)" value="${field.name}" 
-                                        onchange="ManagerApp.updateField(${sIndex}, ${fIndex}, 'name', this.value)"
-                                        class="border rounded p-1 text-sm w-32 font-mono text-gray-500">
-                                </div>
-                                <div class="flex gap-2">
-                                    <select onchange="ManagerApp.updateField(${sIndex}, ${fIndex}, 'type', this.value)" class="border rounded p-1 text-xs w-24">
-                                        <option value="checkbox" ${field.type==='checkbox'?'selected':''}>Checkbox</option>
-                                        <option value="text" ${field.type==='text'?'selected':''}>Text</option>
-                                        <option value="number" ${field.type==='number'?'selected':''}>Number</option>
-                                        <option value="date" ${field.type==='date'?'selected':''}>Date</option>
-                                        <option value="select" ${field.type==='select'?'selected':''}>Dropdown</option>
-                                        <option value="textarea" ${field.type==='textarea'?'selected':''}>Long Text</option>
-                                    </select>
-                                    <select onchange="ManagerApp.updateField(${sIndex}, ${fIndex}, 'width', this.value)" class="border rounded p-1 text-xs w-24">
-                                        <option value="full" ${field.width==='full'?'selected':''}>Full Width</option>
-                                        <option value="half" ${field.width==='half'?'selected':''}>1/2 Width</option>
-                                        <option value="third" ${field.width==='third'?'selected':''}>1/3 Width</option>
-                                        <option value="quarter" ${field.width==='quarter'?'selected':''}>1/4 Width</option>
-                                    </select>
-                                    ${field.type === 'select' ? 
-                                        `<input type="text" placeholder="Options (comma sep)" value="${field.options || ''}" 
-                                         onchange="ManagerApp.updateField(${sIndex}, ${fIndex}, 'options', this.value)"
-                                         class="border rounded p-1 text-xs flex-1">` : ''
-                                    }
-                                </div>
-                            </div>
-                            <div class="flex flex-col justify-between h-full opacity-50 group-hover:opacity-100">
-                                 <button onclick="ManagerApp.deleteField(${sIndex}, ${fIndex})" class="text-red-500 hover:font-bold">&times;</button>
-                                 <div class="flex flex-col">
-                                    <button onclick="ManagerApp.moveField(${sIndex}, ${fIndex}, -1)" class="text-[10px] text-gray-500">▲</button>
-                                    <button onclick="ManagerApp.moveField(${sIndex}, ${fIndex}, 1)" class="text-[10px] text-gray-500">▼</button>
-                                 </div>
-                            </div>
-                        `;
-                        fieldsContainer.appendChild(fieldRow);
-                    });
-                    container.appendChild(sectionEl);
-                });
-            },
-
-            addSection: function() {
-                this.currentConfig.sections.push({
-                    id: "NewSection" + Date.now(),
-                    title: "New Category",
-                    fields: []
-                });
-                this.renderEditor();
-            },
-            updateSection: function(idx, key, val) { this.currentConfig.sections[idx][key] = val; },
-            deleteSection: function(idx) {
-                if(confirm('Delete this entire section?')) {
-                    this.currentConfig.sections.splice(idx, 1);
-                    this.renderEditor();
-                }
-            },
-            moveSection: function(idx, dir) {
-                if (idx + dir < 0 || idx + dir >= this.currentConfig.sections.length) return;
-                const temp = this.currentConfig.sections[idx];
-                this.currentConfig.sections[idx] = this.currentConfig.sections[idx + dir];
-                this.currentConfig.sections[idx + dir] = temp;
-                this.renderEditor();
-            },
-            addField: function(sIdx) {
-                this.currentConfig.sections[sIdx].fields.push({
-                    label: "New Question", name: "NewQ" + Date.now(), type: "checkbox", width: "quarter"
-                });
-                this.renderEditor();
-            },
-            updateField: function(sIdx, fIdx, key, val) {
-                this.currentConfig.sections[sIdx].fields[fIdx][key] = val;
-                if(key === 'type') this.renderEditor();
-            },
-            deleteField: function(sIdx, fIdx) {
-                this.currentConfig.sections[sIdx].fields.splice(fIdx, 1);
-                this.renderEditor();
-            },
-            moveField: function(sIdx, fIdx, dir) {
-                const fields = this.currentConfig.sections[sIdx].fields;
-                if (fIdx + dir < 0 || fIdx + dir >= fields.length) return;
-                const temp = fields[fIdx];
-                fields[fIdx] = fields[fIdx + dir];
-                fields[fIdx + dir] = temp;
-                this.renderEditor();
-            }
-        };
 
 
         /* ================= INVENTORY MODULE ================= */
@@ -1881,11 +1502,10 @@
                         if(!lines[i].trim()) continue;
                         // CSV parsing logic simplified for brevity (splitting by comma)
                         // In production, use PapaParse here too like DrugBag module
-                        const cols = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(s => s.replace(/^"|"$/g, '').trim());
-                        
-                        // Map cols based on index (assuming standard export format from user's file)
                         // This logic mirrors the user's original file index logic
                         // We'll use a safer approach: just grab what we can
+                        const cols = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(s => s.replace(/^"|"$/g, '').trim());
+                        
                         
                         const data = {
                             createdAt: serverTimestamp(),
@@ -2162,8 +1782,6 @@
         window.DrugBagApp = DrugBagApp;
         window.OxygenApp = OxygenApp;
         window.DestructionApp = DestructionApp;
-        window.ManagerApp = ManagerApp;
-        window.RecordsApp = RecordsApp;
 
         // Default Router State
         Router.navigate('dashboard');
