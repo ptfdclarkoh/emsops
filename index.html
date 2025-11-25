@@ -6,19 +6,15 @@
     <title>EMS OPS ADMIN</title>
     <link rel="icon" type="image/x-icon" href="./assets/favicon.ico">
     
-    <!-- PWA Settings -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="EMS ADMIN">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <link rel="apple-touch-icon" sizes="180x180" href="./assets/apple-touch-icon4.png">
 
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- PapaParse for CSV -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
     <style>
@@ -76,13 +72,11 @@
 </head>
 <body class="flex h-screen overflow-hidden text-gray-800">
 
-    <!-- Notification Toast -->
     <div id="notification" class="fixed top-4 right-4 z-[60] px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 hidden transition-all transform translate-y-0">
         <span id="notif-icon"></span>
         <span id="notif-message" class="font-medium"></span>
     </div>
 
-    <!-- Mobile Header (Visible only on small screens) -->
     <div class="fixed w-full z-30 flex bg-white border-b p-4 md:hidden items-center justify-between h-16">
         <div class="flex items-center font-bold text-xl text-gray-800">
             <img src="https://i.ibb.co/n8R3dn8f/apple-touch-icon4.png" alt="Logo" class="h-10 w-10 object-contain mr-2">
@@ -93,11 +87,12 @@
         </button>
     </div>
 
-    <!-- Sidebar Navigation -->
     <aside id="sidebar" class="bg-white border-r w-64 flex-shrink-0 fixed md:static h-full z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col">
         <div class="h-16 flex items-center px-6 border-b">
             <img src="https://i.ibb.co/n8R3dn8f/apple-touch-icon4.png" alt="Logo" class="h-12 w-12 object-contain mr-3">
-            <span class="text-xl font-bold text-gray-800">EMS OPS ADMIN</span>
+            <div class="text-center">
+  <span class="text-xl font-bold text-gray-800">EMS OPS ADMIN</span>
+</div>
         </div>
 
         <div class="flex-1 overflow-y-auto no-scrollbar py-4">
@@ -118,7 +113,7 @@
                     <span class="font-medium">Form Manager</span>
                 </a>
 
-                <div class="px-6 pt-4 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Supplies</div>
+                <div class="px-6 pt-4 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Inventory</div>
                 
                 <a href="#" onclick="Router.navigate('inventory')" id="nav-inventory" class="nav-item flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">
                     <i class="fa-solid fa-boxes-stacked w-6"></i>
@@ -127,6 +122,10 @@
                 <a href="#" onclick="Router.navigate('transactions')" id="nav-transactions" class="nav-item flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">
                     <i class="fa-solid fa-clipboard-list w-6"></i>
                     <span class="font-medium">Transactions</span>
+                </a>
+                <a href="#" onclick="Router.navigate('requests')" id="nav-requests" class="nav-item flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">
+                    <i class="fa-solid fa-cart-plus w-6"></i>
+                    <span class="font-medium">Settings</span>
                 </a>
 
                 <div class="px-6 pt-4 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Logistics</div>
@@ -159,19 +158,16 @@
         </div>
     </aside>
 
-    <!-- Overlay for mobile sidebar -->
     <div id="sidebarOverlay" class="fixed inset-0 bg-gray-800 bg-opacity-50 z-30 hidden md:hidden"></div>
 
-    <!-- Main Content Area -->
     <main class="flex-1 overflow-y-auto h-full pt-16 md:pt-0 bg-gray-100 relative">
         
-        <!-- === VIEW: DASHBOARD === -->
         <div id="view-dashboard" class="view-section active p-6 max-w-7xl mx-auto">
             <h1 class="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
             <p class="text-gray-500 mb-8">Welcome to the Pleasant Township EMS Operations Admin Hub</p>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Card 1 -->
+                <!-- Medic 75 Logs -->
                 <div onclick="Router.navigate('records')" class="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition cursor-pointer border border-gray-100 group">
                     <div class="flex items-center justify-between mb-4">
                         <div class="p-3 rounded-full bg-orange-100 text-orange-600 group-hover:bg-orange-600 group-hover:text-white transition">
@@ -183,7 +179,19 @@
                     <p class="text-gray-500 text-sm mt-1">View submitted daily checklists and inspections.</p>
                 </div>
 
-                <!-- Card 2 -->
+                <!-- Form Manager (New) -->
+                <div onclick="Router.navigate('manager')" class="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition cursor-pointer border border-gray-100 group">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="p-3 rounded-full bg-teal-100 text-teal-600 group-hover:bg-teal-600 group-hover:text-white transition">
+                            <i class="fa-solid fa-sliders text-xl"></i>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-gray-300"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-800">Form Manager</h3>
+                    <p class="text-gray-500 text-sm mt-1">Manage checklists, forms, and system configurations.</p>
+                </div>
+
+                <!-- Supply Inventory -->
                 <div onclick="Router.navigate('inventory')" class="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition cursor-pointer border border-gray-100 group">
                     <div class="flex items-center justify-between mb-4">
                         <div class="p-3 rounded-full bg-blue-100 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition">
@@ -195,7 +203,31 @@
                     <p class="text-gray-500 text-sm mt-1">Manage cabinet contents, edit items, and check expiration dates.</p>
                 </div>
 
-                <!-- Card 3 -->
+                <!-- Transactions (New) -->
+                <div onclick="Router.navigate('transactions')" class="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition cursor-pointer border border-gray-100 group">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="p-3 rounded-full bg-yellow-100 text-yellow-600 group-hover:bg-yellow-600 group-hover:text-white transition">
+                            <i class="fa-solid fa-clipboard-list text-xl"></i>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-gray-300"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-800">Transactions</h3>
+                    <p class="text-gray-500 text-sm mt-1">View history of inventory changes and adjustments.</p>
+                </div>
+
+                <!-- Settings (New) -->
+                <div onclick="Router.navigate('requests')" class="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition cursor-pointer border border-gray-100 group">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="p-3 rounded-full bg-indigo-100 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition">
+                            <i class="fa-solid fa-cart-plus text-xl"></i>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-gray-300"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-800">Settings</h3>
+                    <p class="text-gray-500 text-sm mt-1">Manage system settings and external requests.</p>
+                </div>
+
+                <!-- Drug Bag Exchange -->
                 <div onclick="Router.navigate('drugbag')" class="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition cursor-pointer border border-gray-100 group">
                     <div class="flex items-center justify-between mb-4">
                         <div class="p-3 rounded-full bg-red-100 text-red-600 group-hover:bg-red-600 group-hover:text-white transition">
@@ -207,7 +239,7 @@
                     <p class="text-gray-500 text-sm mt-1">Log bag exchanges, track numbers, and view history.</p>
                 </div>
 
-                <!-- Card 4 -->
+                <!-- Oxygen Tracker -->
                 <div onclick="Router.navigate('oxygen')" class="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition cursor-pointer border border-gray-100 group">
                     <div class="flex items-center justify-between mb-4">
                         <div class="p-3 rounded-full bg-green-100 text-green-600 group-hover:bg-green-600 group-hover:text-white transition">
@@ -219,7 +251,7 @@
                     <p class="text-gray-500 text-sm mt-1">Track main tank refills and portable bottle usage.</p>
                 </div>
 
-                <!-- Card 5 -->
+                <!-- Drug Destruction -->
                 <div onclick="Router.navigate('destruction')" class="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition cursor-pointer border border-gray-100 group">
                     <div class="flex items-center justify-between mb-4">
                         <div class="p-3 rounded-full bg-purple-100 text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition">
@@ -233,20 +265,20 @@
             </div>
         </div>
 
-        <!-- === VIEW: RECORDS (MEDIC 75 LOGS) === -->
         <div id="view-records" class="view-section h-full w-full p-0 overflow-hidden">
             <iframe src="mediccheckrecords.html" class="w-full h-full border-0"></iframe>
         </div>
 
-        <!-- === VIEW: FORM MANAGER === -->
         <div id="view-manager" class="view-section h-full w-full p-0 overflow-hidden">
              <iframe src="mediccheckmanager.html" class="w-full h-full border-0"></iframe>
         </div>
 
-        <!-- === VIEW: INVENTORY === -->
+        <div id="view-requests" class="view-section h-full w-full p-0 overflow-hidden">
+             <iframe src="https://script.google.com/macros/s/AKfycbwWnmh_1G9zvBUn6Ut-czAcqIP5hbHYwAXkSncL_EXU2OEnHC-XSpRi-y38_ghTD0dd/exec" class="w-full h-full border-0"></iframe>
+        </div>
+
         <div id="view-inventory" class="view-section p-4 lg:p-8">
             <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                <!-- Form Column -->
                 <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-lg h-auto">
                     <h2 class="text-xl font-bold text-gray-800 mb-4">Add/Edit Item</h2>
                     <form id="inv_form" class="space-y-4">
@@ -255,7 +287,6 @@
                         <div>
                             <label class="block text-xs font-medium text-gray-700 mb-1">Cabinet</label>
                             <div id="inv_cabinetButtons" class="grid grid-cols-5 gap-1">
-                                <!-- JS Populated or static -->
                                 <button type="button" class="inv-btn-choice border px-1 py-2 rounded text-sm hover:bg-gray-100" data-value="1">1</button>
                                 <button type="button" class="inv-btn-choice border px-1 py-2 rounded text-sm hover:bg-gray-100" data-value="2">2</button>
                                 <button type="button" class="inv-btn-choice border px-1 py-2 rounded text-sm hover:bg-gray-100" data-value="3">3</button>
@@ -305,7 +336,6 @@
                     </form>
                 </div>
 
-                <!-- Table Column -->
                 <div class="lg:col-span-3 bg-white p-6 rounded-xl shadow-lg flex flex-col h-[calc(100vh-140px)]">
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="text-2xl font-bold text-gray-800">Current Supplies</h2>
@@ -328,8 +358,7 @@
                                 </tr>
                             </thead>
                             <tbody id="inv_tableBody" class="bg-white divide-y divide-gray-200">
-                                <!-- JS Populated -->
-                            </tbody>
+                                </tbody>
                         </table>
                         <div id="inv_loading" class="flex justify-center p-8"><div class="spinner"></div></div>
                     </div>
@@ -337,7 +366,6 @@
             </div>
         </div>
 
-        <!-- === VIEW: TRANSACTIONS === -->
         <div id="view-transactions" class="view-section p-4 lg:p-8">
             <div class="bg-white p-6 rounded-xl shadow-lg h-full">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 border-b pb-4">
@@ -355,7 +383,6 @@
                     </div>
                 </div>
 
-                <!-- Filters -->
                 <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-4 bg-gray-50 p-4 rounded border">
                     <div class="md:col-span-6">
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Search</label>
@@ -389,7 +416,6 @@
             </div>
         </div>
 
-        <!-- === VIEW: DRUG BAG EXCHANGE === -->
         <div id="view-drugbag" class="view-section p-4 lg:p-8">
             <div class="max-w-7xl mx-auto">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
@@ -399,7 +425,6 @@
                     </button>
                 </div>
 
-                <!-- Filters -->
                 <div class="bg-white p-4 rounded-lg shadow mb-6 grid grid-cols-1 md:grid-cols-5 gap-4">
                     <div class="md:col-span-2">
                          <label class="block text-xs text-gray-500 mb-1">Search Bag #</label>
@@ -440,10 +465,8 @@
             </div>
         </div>
 
-        <!-- === VIEW: OXYGEN TRACKER === -->
         <div id="view-oxygen" class="view-section p-4 lg:p-8">
             <div class="max-w-7xl mx-auto">
-                <!-- Header -->
                 <div class="flex justify-between items-center mb-6">
                     <div class="flex items-center">
                         <div class="bg-blue-600 text-white p-3 rounded-lg mr-4">
@@ -468,7 +491,6 @@
                     </div>
                 </div>
 
-                <!-- Filters -->
                 <div class="bg-white p-4 rounded-lg shadow mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div class="md:col-span-2">
                          <label class="block text-xs text-gray-500 mb-1">Search Member/ID</label>
@@ -484,7 +506,6 @@
                     </div>
                 </div>
 
-                <!-- Tabs -->
                 <div class="flex border-b border-gray-200 mb-6">
                     <button onclick="OxygenApp.switchTab('main')" id="ox-tab-main" class="px-6 py-3 text-blue-600 border-b-2 border-blue-600 font-medium focus:outline-none transition-colors">
                         Main Tank
@@ -494,7 +515,6 @@
                     </button>
                 </div>
 
-                <!-- Subcategory: Main Tank -->
                 <div id="ox-view-main" class="bg-white rounded shadow-lg mb-8 overflow-hidden animate-fade-in">
                     <div class="bg-blue-600 text-white p-3 font-bold flex items-center">
                         <i class="fa-solid fa-truck-medical mr-2"></i> Main Tank Exchanges
@@ -515,7 +535,6 @@
                     </div>
                 </div>
 
-                <!-- Subcategory: Portable -->
                 <div id="ox-view-portable" class="hidden bg-white rounded shadow-lg mb-8 overflow-hidden animate-fade-in">
                     <div class="bg-green-600 text-white p-3 font-bold flex items-center">
                         <i class="fa-solid fa-suitcase-medical mr-2"></i> Portable Logs
@@ -540,7 +559,6 @@
             </div>
         </div>
 
-        <!-- === VIEW: DRUG DESTRUCTION === -->
         <div id="view-destruction" class="view-section p-4 lg:p-8">
             <div class="max-w-7xl mx-auto">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
@@ -555,7 +573,6 @@
                     </div>
                 </div>
 
-                <!-- Filters -->
                 <div class="bg-white p-4 rounded-lg shadow mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
                         <label class="block text-xs text-gray-500 mb-1 uppercase tracking-wider font-medium">Start Date</label>
@@ -587,8 +604,7 @@
                                 </tr>
                             </thead>
                             <tbody id="dest_tableBody" class="divide-y divide-gray-100">
-                                <!-- JS Populated -->
-                            </tbody>
+                                </tbody>
                         </table>
                         <div id="dest_loading" class="text-center p-12 text-gray-500">
                             <div class="spinner mx-auto mb-2"></div>
@@ -602,10 +618,8 @@
 
     </main>
 
-    <!-- Report Preview Modal -->
     <div id="modal_report" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-50 hidden flex flex-col items-center justify-center p-4">
         <div class="bg-white w-full max-w-4xl h-full max-h-[90vh] rounded-lg shadow-2xl flex flex-col overflow-hidden">
-            <!-- Header -->
             <div class="flex justify-between items-center p-4 border-b bg-gray-50">
                 <h3 class="text-lg font-bold text-gray-800">Report Preview</h3>
                 <div class="flex gap-2">
@@ -617,14 +631,11 @@
                     </button>
                 </div>
             </div>
-            <!-- Content Wrapper -->
             <div id="report_preview_body" class="flex-1 overflow-y-auto p-8 bg-white">
-                <!-- Injected Report Content -->
-            </div>
+                </div>
         </div>
     </div>
 
-    <!-- Destruction Entry Modal -->
     <div id="modal_dest_entry" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-50 hidden flex flex-col items-center justify-center p-4">
         <div class="bg-white w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto relative animate-fade-in">
             <button onclick="DestructionApp.closeEntryModal()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 z-10">
@@ -704,7 +715,6 @@
         </div>
     </div>
 
-    <!-- Generic Edit/Delete Modal (Used by Inventory) -->
     <div id="modal_action" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-50 hidden items-center justify-center">
         <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm mx-4">
             <h3 class="text-lg font-bold mb-2">Manage Item</h3>
@@ -717,7 +727,6 @@
         </div>
     </div>
 
-    <!-- Confirm Delete Modal -->
     <div id="modal_confirm" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-50 hidden items-center justify-center">
          <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm mx-4">
             <div class="text-center mb-4">
