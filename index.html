@@ -1911,7 +1911,7 @@
             if (user) {
                 // LOGGED IN
                 currentUser = user;
-                statusEl.textContent = `${user.email}`;
+                statusEl.textContent = user.email || `User: ${user.uid.slice(0,5)}...`;
                 statusEl.classList.add('text-green-600');
                 
                 // Show App UI
