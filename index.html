@@ -68,16 +68,71 @@
             max-width: 100%; /* Ensures it doesn't exceed its container */
             box-sizing: border-box;
         }
+        
+        /* Login Fade */
+        .login-fade-out {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
     </style>
 </head>
-<body class="flex h-screen overflow-hidden text-gray-800">
+<body class="flex h-screen overflow-hidden text-gray-800 relative">
 
+    <!-- LOGIN SCREEN -->
+    <div id="login-view" class="fixed inset-0 z-[100] bg-gray-100 flex flex-col items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-200">
+            <div class="text-center mb-8">
+                <img src="https://i.ibb.co/n8R3dn8f/apple-touch-icon4.png" alt="Logo" class="h-20 w-20 object-contain mx-auto mb-4">
+                <h1 class="text-2xl font-bold text-gray-800">EMS Ops Admin</h1>
+                <p class="text-gray-500 text-sm mt-2">Please sign in to continue</p>
+            </div>
+            
+            <form id="login-form" class="space-y-6">
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fa-solid fa-envelope text-gray-400"></i>
+                        </div>
+                        <input type="email" id="login-email" required class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="you@example.com">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fa-solid fa-lock text-gray-400"></i>
+                        </div>
+                        <input type="password" id="login-password" required class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="••••••••">
+                    </div>
+                </div>
+
+                <div id="login-error" class="hidden bg-red-50 text-red-600 text-sm p-3 rounded-lg border border-red-200 flex items-center">
+                    <i class="fa-solid fa-circle-exclamation mr-2"></i>
+                    <span id="login-error-msg">Invalid credentials</span>
+                </div>
+
+                <button type="submit" id="login-btn" class="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                    Sign In
+                </button>
+            </form>
+            
+            <div class="mt-6 text-center">
+                <p class="text-xs text-gray-400">Authorized personnel only.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- NOTIFICATION TOAST -->
     <div id="notification" class="fixed top-4 right-4 z-[60] px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 hidden transition-all transform translate-y-0">
         <span id="notif-icon"></span>
         <span id="notif-message" class="font-medium"></span>
     </div>
 
-    <div class="fixed w-full z-30 flex bg-white border-b p-4 md:hidden items-center justify-between h-16">
+    <!-- MOBILE HEADER -->
+    <div id="mobile-header" class="hidden fixed w-full z-30 flex bg-white border-b p-4 md:hidden items-center justify-between h-16">
         <div class="flex items-center font-bold text-xl text-gray-800">
             <img src="https://i.ibb.co/n8R3dn8f/apple-touch-icon4.png" alt="Logo" class="h-10 w-10 object-contain mr-2">
             Medic 75
@@ -87,12 +142,13 @@
         </button>
     </div>
 
-    <aside id="sidebar" class="bg-white border-r w-64 flex-shrink-0 fixed md:static h-full z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col">
+    <!-- SIDEBAR -->
+    <aside id="sidebar" class="hidden bg-white border-r w-64 flex-shrink-0 fixed md:static h-full z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col">
         <div class="h-16 flex items-center px-6 border-b">
             <img src="https://i.ibb.co/n8R3dn8f/apple-touch-icon4.png" alt="Logo" class="h-12 w-12 object-contain mr-3">
             <div class="text-center">
-  <span class="text-xl font-bold text-gray-800">EMS OPS ADMIN</span>
-</div>
+                <span class="text-xl font-bold text-gray-800">EMS OPS ADMIN</span>
+            </div>
         </div>
 
         <div class="flex-1 overflow-y-auto no-scrollbar py-4">
@@ -146,21 +202,27 @@
         </div>
 
         <div class="p-4 border-t bg-gray-50">
-            <div class="flex items-center">
-                <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
-                    <i class="fa-regular fa-user"></i>
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
+                        <i class="fa-regular fa-user"></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-gray-700" id="userStatus">Connecting...</p>
+                        <p class="text-xs text-gray-500">Firestore Connected</p>
+                    </div>
                 </div>
-                <div class="ml-3">
-                    <p class="text-sm font-medium text-gray-700" id="userStatus">Connecting...</p>
-                    <p class="text-xs text-gray-500">Firestore Connected</p>
-                </div>
+                <button onclick="handleLogout()" class="text-gray-400 hover:text-red-600 transition-colors p-2 rounded-full hover:bg-red-50" title="Sign Out">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </button>
             </div>
         </div>
     </aside>
 
     <div id="sidebarOverlay" class="fixed inset-0 bg-gray-800 bg-opacity-50 z-30 hidden md:hidden"></div>
 
-    <main class="flex-1 overflow-y-auto h-full pt-16 md:pt-0 bg-gray-100 relative">
+    <!-- MAIN CONTENT -->
+    <main class="hidden flex-1 overflow-y-auto h-full pt-16 md:pt-0 bg-gray-100 relative">
         
         <div id="view-dashboard" class="view-section active p-6 max-w-7xl mx-auto">
             <h1 class="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
@@ -745,7 +807,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, query, orderBy, limit, onSnapshot, addDoc, setDoc, getDoc, deleteDoc, doc, serverTimestamp, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- GLOBAL CONFIG ---
@@ -846,6 +908,41 @@
             setTimeout(() => {
                 notif.classList.add('hidden');
             }, 3000);
+        };
+        
+        // --- LOGIN LOGIC ---
+        const loginForm = document.getElementById('login-form');
+        const loginError = document.getElementById('login-error');
+        const loginBtn = document.getElementById('login-btn');
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Signing in...';
+            loginError.classList.add('hidden');
+            
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                // Auth listener will handle the UI switch
+            } catch (error) {
+                console.error("Login failed", error);
+                loginError.classList.remove('hidden');
+                document.getElementById('login-error-msg').textContent = "Invalid email or password.";
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Sign In';
+            }
+        });
+
+        window.handleLogout = async () => {
+             try {
+                 await signOut(auth);
+                 // Auth listener handles UI
+             } catch (error) {
+                 console.error("Logout failed", error);
+             }
         };
 
         // --- APP MODULES ---
@@ -1051,7 +1148,7 @@
                     reason: reason,
                     quantityTaken: qty,
                     loggedAt: serverTimestamp(),
-                    person: currentUser ? currentUser.uid.slice(0, 6) : 'Anon'
+                    person: currentUser ? currentUser.email : 'Anon'
                 });
             },
 
@@ -1805,22 +1902,51 @@
 
         // --- AUTH & INIT ---
         onAuthStateChanged(auth, async (user) => {
+            const loginView = document.getElementById('login-view');
+            const sidebar = document.getElementById('sidebar');
+            const mobileHeader = document.getElementById('mobile-header');
+            const mainContent = document.querySelector('main');
             const statusEl = document.getElementById('userStatus');
+
             if (user) {
+                // LOGGED IN
                 currentUser = user;
-                statusEl.textContent = `User: ${user.uid.slice(0,5)}...`;
+                statusEl.textContent = `${user.email}`;
                 statusEl.classList.add('text-green-600');
                 
+                // Show App UI
+                loginView.classList.add('login-fade-out');
+                setTimeout(() => loginView.classList.add('hidden'), 500); // Allow fade animation
+                
+                sidebar.classList.remove('hidden');
+                sidebar.classList.add('flex');
+                mobileHeader.classList.remove('hidden');
+                mobileHeader.classList.add('flex');
+                mainContent.classList.remove('hidden');
+
                 // Initialize current view if needed
                 if(Router.current === 'inventory') InventoryApp.init();
             } else {
-                statusEl.textContent = 'Authenticating...';
-                // Auto Sign-in
+                // LOGGED OUT
+                currentUser = null;
+                statusEl.textContent = 'Not connected';
+                
+                // Show Login UI
+                loginView.classList.remove('hidden');
+                loginView.classList.remove('login-fade-out');
+                
+                // Hide App UI
+                sidebar.classList.add('hidden');
+                sidebar.classList.remove('flex');
+                mobileHeader.classList.add('hidden');
+                mobileHeader.classList.remove('flex');
+                mainContent.classList.add('hidden');
+                
+                // Auto Sign-in Check (Keep existing custom token logic if present)
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
                 }
+                // Removed Anonymous Fallback
             }
         });
         
