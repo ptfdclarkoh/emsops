@@ -9,7 +9,7 @@
     <!-- iOS Web App Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="M75 EXP">
+    <meta name="apple-mobile-web-app-title" content="EMS Inv">
     
     <!-- App Icon (Embedded Red Cross for Home Screen) -->
     <link rel="apple-touch-icon" href="./assets/apple-touch-icon4.png">
@@ -44,6 +44,20 @@
         }
         .safe-bottom {
             padding-bottom: env(safe-area-inset-bottom);
+        }
+        /* Hide scrollbar for cleaner UI */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        /* Custom styles for date and time inputs to ensure proper sizing */
+        input[type="date"], input[type="datetime-local"] {
+            width: 90%; /* Reverts to the browser's default sizing */
+            max-width: 100%; /* Ensures it doesn't exceed its container */
+            box-sizing: border-box;
         }
     </style>
 </head>
@@ -108,33 +122,57 @@
         const COLLECTION_NAME = 'ems_supplies';
 
         // --- Helper Functions ---
+        
+        // Helper to parse YYYY-MM-DD as local date components to avoid UTC timezone shifts
+        const parseLocalDate = (dateString) => {
+            if (!dateString) return null;
+            // Handle YYYY-MM-DD format manually
+            if (dateString.includes('-')) {
+                const parts = dateString.split('-');
+                if (parts.length === 3) {
+                    // Create date as Local Time (using year, monthIndex, day constructor)
+                    // Note: Month is 0-indexed in JS Date constructor
+                    return new Date(parts[0], parts[1] - 1, parts[2]);
+                }
+            }
+            // Fallback for standard date parsing
+            return new Date(dateString);
+        };
+
         const formatDateForInput = (dateString) => {
             if (!dateString) return '';
-            const date = new Date(dateString);
-            if (isNaN(date.getTime())) return '';
-            return date.toISOString().split('T')[0];
+            const date = parseLocalDate(dateString);
+            if (!date || isNaN(date.getTime())) return '';
+            
+            // Use local components to reconstruct YYYY-MM-DD, preventing UTC shift
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
         };
 
         const formatDateDisplay = (dateString) => {
             if (!dateString) return 'N/A';
-            const date = new Date(dateString);
-            if (isNaN(date.getTime())) return dateString;
+            const date = parseLocalDate(dateString);
+            if (!date || isNaN(date.getTime())) return dateString;
             return date.toLocaleDateString();
         };
 
         const isExpired = (dateString) => {
             if (!dateString) return false;
-            const date = new Date(dateString);
+            const date = parseLocalDate(dateString);
             const now = new Date();
+            now.setHours(0,0,0,0); // Compare against start of today
             return date < now;
         };
 
         const isExpiringSoon = (dateString, days = 30) => {
             if (!dateString) return false;
-            const date = new Date(dateString);
+            const date = parseLocalDate(dateString);
             const now = new Date();
-            const future = new Date();
-            future.setDate(now.getDate() + days);
+            now.setHours(0,0,0,0);
+            const future = new Date(now);
+            future.setDate(future.getDate() + days);
             return date >= now && date <= future;
         };
 
@@ -210,7 +248,8 @@ Medic 75,Compartment 3,,Soft Suction 12fr,9/30/2018,EXPIRED EXAMPLE`;
                             location: row[1]?.trim() || '',
                             subLocation: row[2]?.trim() || '',
                             equipment: row[3]?.trim() || 'Unknown Item',
-                            expires: formatDateForInput(row[4]?.trim()),
+                            // Ensure date is formatted for YYYY-MM-DD input
+                            expires: formatDateForInput(row[4]?.trim()), 
                             notes: row.slice(5).join(',').trim()
                         };
                         records.push(record);
@@ -270,6 +309,7 @@ Medic 75,Compartment 3,,Soft Suction 12fr,9/30/2018,EXPIRED EXAMPLE`;
 
             useEffect(() => {
                 if (initialData) {
+                    // initialData.expires is usually YYYY-MM-DD from Firestore
                     setFormData(initialData);
                 }
             }, [initialData]);
