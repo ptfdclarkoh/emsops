@@ -168,6 +168,11 @@
                     <i class="fa-solid fa-sliders w-6"></i>
                     <span class="font-medium">Form Manager</span>
                 </a>
+                <!-- ADDED: Nav Link for Apparatus Inventory -->
+                <a href="#" onclick="Router.navigate('m75inv')" id="nav-m75inv" class="nav-item flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">
+                    <i class="fa-solid fa-truck-medical w-6"></i>
+                    <span class="font-medium">Apparatus Inv.</span>
+                </a>
 
                 <div class="px-6 pt-4 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Inventory</div>
                 
@@ -241,7 +246,7 @@
                     <p class="text-gray-500 text-sm mt-1">View submitted daily checklists and inspections.</p>
                 </div>
 
-                <!-- Form Manager (New) -->
+                <!-- Form Manager -->
                 <div onclick="Router.navigate('manager')" class="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition cursor-pointer border border-gray-100 group">
                     <div class="flex items-center justify-between mb-4">
                         <div class="p-3 rounded-full bg-teal-100 text-teal-600 group-hover:bg-teal-600 group-hover:text-white transition">
@@ -251,6 +256,18 @@
                     </div>
                     <h3 class="text-lg font-bold text-gray-800">Form Manager</h3>
                     <p class="text-gray-500 text-sm mt-1">Manage checklists, forms, and system configurations.</p>
+                </div>
+
+                <!-- ADDED: Apparatus Inventory Card -->
+                <div onclick="Router.navigate('m75inv')" class="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition cursor-pointer border border-gray-100 group">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="p-3 rounded-full bg-indigo-100 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition">
+                            <i class="fa-solid fa-truck-medical text-xl"></i>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-gray-300"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-800">Apparatus Inventory</h3>
+                    <p class="text-gray-500 text-sm mt-1">Manage equipment and expiration dates on Medic 75.</p>
                 </div>
 
                 <!-- Supply Inventory -->
@@ -265,7 +282,7 @@
                     <p class="text-gray-500 text-sm mt-1">Manage cabinet contents, edit items, and check expiration dates.</p>
                 </div>
 
-                <!-- Transactions (New) -->
+                <!-- Transactions -->
                 <div onclick="Router.navigate('transactions')" class="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition cursor-pointer border border-gray-100 group">
                     <div class="flex items-center justify-between mb-4">
                         <div class="p-3 rounded-full bg-yellow-100 text-yellow-600 group-hover:bg-yellow-600 group-hover:text-white transition">
@@ -277,10 +294,10 @@
                     <p class="text-gray-500 text-sm mt-1">View history of inventory changes and adjustments.</p>
                 </div>
 
-                <!-- Settings (New) -->
+                <!-- Settings -->
                 <div onclick="Router.navigate('requests')" class="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition cursor-pointer border border-gray-100 group">
                     <div class="flex items-center justify-between mb-4">
-                        <div class="p-3 rounded-full bg-indigo-100 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition">
+                        <div class="p-3 rounded-full bg-gray-100 text-gray-600 group-hover:bg-gray-600 group-hover:text-white transition">
                             <i class="fa-solid fa-cart-plus text-xl"></i>
                         </div>
                         <i class="fa-solid fa-chevron-right text-gray-300"></i>
@@ -333,6 +350,11 @@
 
         <div id="view-manager" class="view-section h-full w-full p-0 overflow-hidden">
              <iframe src="mediccheckmanager.html" class="w-full h-full border-0"></iframe>
+        </div>
+
+        <!-- ADDED: Iframe container for m75inv.html -->
+        <div id="view-m75inv" class="view-section h-full w-full p-0 overflow-hidden">
+             <iframe src="m75inv.html" class="w-full h-full border-0"></iframe>
         </div>
 
         <div id="view-requests" class="view-section h-full w-full p-0 overflow-hidden">
