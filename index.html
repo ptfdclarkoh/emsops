@@ -84,7 +84,7 @@
         <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-200">
             <div class="text-center mb-8">
                 <img src="https://i.ibb.co/n8R3dn8f/apple-touch-icon4.png" alt="Logo" class="h-20 w-20 object-contain mx-auto mb-4">
-                <h1 class="text-2xl font-bold text-gray-800">EMS Ops Admin</h1>
+                <h1 class="text-2xl font-bold text-gray-800">EMS OPS ADMIN</h1>
                 <p class="text-gray-500 text-sm mt-2">Please sign in to continue</p>
             </div>
             
@@ -1929,6 +1929,12 @@
             const mobileHeader = document.getElementById('mobile-header');
             const mainContent = document.querySelector('main');
             const statusEl = document.getElementById('userStatus');
+
+            // SECURITY FIX: Prevent anonymous access
+            if (user && user.isAnonymous) {
+                await signOut(auth);
+                return;
+            }
 
             if (user) {
                 // LOGGED IN
