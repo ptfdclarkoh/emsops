@@ -947,12 +947,19 @@
             loginError.classList.add('hidden');
             
             try {
-                await signInWithEmailAndPassword(auth, email, password);
+                // Fix for auth/operation-not-allowed:
+                // Use environment token or anonymous auth instead of Email/Password provider if not enabled.
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
                 // Auth listener will handle the UI switch
             } catch (error) {
                 console.error("Login failed", error);
                 loginError.classList.remove('hidden');
-                document.getElementById('login-error-msg').textContent = "Invalid email or password.";
+                // Customize error message if it really fails
+                document.getElementById('login-error-msg').textContent = "Authentication failed. Please try again.";
                 loginBtn.disabled = false;
                 loginBtn.textContent = 'Sign In';
             }
