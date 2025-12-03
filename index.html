@@ -1964,10 +1964,7 @@
                 mobileHeader.classList.remove('flex');
                 mainContent.classList.add('hidden');
                 
-                // Auto Sign-in Check (Keep existing custom token logic if present)
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                }
+                // Removed Auto Sign-in Check
                 // Removed Anonymous Fallback
             }
         });
